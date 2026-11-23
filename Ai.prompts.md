@@ -572,3 +572,11 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 - **Fix:** check the demo password *before* touching the database, and load demo data whenever the database is missing, empty, or has no accounts. Re-ran the same scenario: login now works. 1 new test; 84 pass.
 - **Other things to check on Render:** use the password set in Render's `CALMA_DEMO_PASSWORD`, not the README's `calma-demo-2026`. Emails end in `@example.org` (e.g. `admin@calma.example.org`). Five wrong tries lock that email for 15 minutes. A self-created account can't log in until the admin approves it.
 - Added a note to `DEMO_GUIDE.md` that the demo password is not the README one.
+
+---
+
+## Prompt 41 — 2026-11-23
+
+> it deployed and login works now
+
+**Outcome:** Calma is live on Render, and login works with the demo password set in Render. Left before sharing: check the Report Builder works on Render (if not, the new error message names the cause, usually `OPENAI_API_KEY`), fill the Render link into `DEMO_GUIDE.md`, and send it with the password shared separately.
