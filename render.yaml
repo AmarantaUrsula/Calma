@@ -1,0 +1,16 @@
+# Render Blueprint for Calma (demo). In Render: New → Blueprint → pick this repo.
+services:
+  - type: web
+    name: calma
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: OPENAI_API_KEY        # paste your key in the Render dashboard; never commit it
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5.6-luna
+      - key: CALMA_SEED_IF_EMPTY   # free instances start with an empty disk: load the made-up demo data
+        value: "1"
+      - key: CALMA_SCHEDULER       # automatic fund website checks make AI calls; off by default here.
+        value: "0"                 # Set to 1 to turn on. Admin → "Check now" still works either way.

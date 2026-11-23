@@ -1,0 +1,17 @@
+# Secrets: never commit real keys
+.env
+*.env
+!.env.example
+
+# Local data (may hold screening data)
+data/*.db
+
+# Python / Node
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+frontend/dist/
+.pytest_cache/
+.DS_Store
+Calma/
