@@ -37,13 +37,27 @@ from .proposals import row_to_rules
 log = logging.getLogger("calma")
 
 
+def _needs_demo_data(path) -> bool:
+    """True if there's no database yet, or it has no accounts (e.g. an earlier start failed halfway)."""
+    if not path.exists() or path.stat().st_size == 0:
+        return True
+    try:
+        conn = sqlite3.connect(path)
+        try:
+            return conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return True
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """On start: create demo data if there's no database yet (fresh Render instance).
     Then run the background scheduler for fund website checks (off when CALMA_SCHEDULER=0)."""
     from .db import db_path
 
-    if os.environ.get("CALMA_SEED_IF_EMPTY") == "1" and not db_path().exists():
+    if os.environ.get("CALMA_SEED_IF_EMPTY") == "1" and _needs_demo_data(db_path()):
         from .seed import reset
 
         reset()

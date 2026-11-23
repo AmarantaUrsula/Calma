@@ -254,6 +254,7 @@ def add_history(conn, n: int = 90, months: int = 6, rng_seed: int = 7) -> int:
 
 
 def reset() -> None:
+    check_demo_password()  # before touching the database, so a bad setting never leaves an empty file behind
     p = db_path()
     if p.exists():
         p.unlink()

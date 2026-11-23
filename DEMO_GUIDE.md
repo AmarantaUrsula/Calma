@@ -7,7 +7,7 @@ Thanks for testing! **Calma** helps abortion patients get funding support. A pat
 ## Before you start
 
 - **Link:** `https://________________.onrender.com` *(filled in by the person who sent you this)*
-- **Password:** every demo account below uses the same password, which the person who sent you this guide will share with you directly.
+- **Password:** every demo account below uses the same password, which the person who sent you this guide will share with you directly. (It's not the password in the project's README; that one only works on a developer's own computer.)
 - **First visit is slow:** the demo runs on a free server that sleeps when no one is using it, so the first page can take about a minute to load.
 - **Data resets:** anything you create may reset when the server restarts. That's expected.
 - **Use two browser windows** (or one private window) to be two people at once, for example a clinic and a fund.

@@ -183,3 +183,23 @@ def test_demo_password_messages_name_the_actual_problem(monkeypatch):
         monkeypatch.setenv("CALMA_DEMO_PASSWORD", value)
         with pytest.raises(seed_mod.MissingDemoPassword, match=words):
             seed_mod.check_demo_password()
+
+
+def test_failed_start_does_not_leave_an_empty_database(tmp_path, monkeypatch):
+    """A first start with a bad demo password must not leave an empty file that blocks seeding later."""
+    from backend import main
+    from backend import seed as seed_mod
+    db = tmp_path / "boot.db"
+    monkeypatch.setenv("CALMA_DB", str(db))
+    monkeypatch.setenv("CALMA_REQUIRE_DEMO_PASSWORD", "1")
+    monkeypatch.setenv("CALMA_DEMO_PASSWORD", "short")
+    with pytest.raises(seed_mod.MissingDemoPassword):
+        seed_mod.reset()
+    assert not db.exists()
+    db.write_bytes(b"")  # even if an empty file exists from an older version...
+    assert main._needs_demo_data(db)  # ...the next start still loads demo data
+    monkeypatch.delenv("CALMA_REQUIRE_DEMO_PASSWORD")
+    conn = connect(db)
+    seed(conn)
+    conn.close()
+    assert not main._needs_demo_data(db)

@@ -560,3 +560,15 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 - **Clearer AI errors:** AI failures now explain the cause in plain English: key rejected (401), not allowed (403), unknown model (404), usage limit or credit (429), OpenAI temporarily down (5xx), or key missing. Applies to the Report Builder, the rules extractor and the website check. Details go to the server log, never key fragments. 4 new tests.
 - **"State" fix:** the agent had read "state" as state of care. Plain "state" now means the patient's home state, and "gestation" maps to weeks pregnant. Live retest: home state, then weeks pregnant, bar chart, Aug 23–Nov 23.
 - 83 tests pass. Next step for the user: redeploy, retry, and read the new message (likely: check `OPENAI_API_KEY` in Render's Environment tab, or OpenAI billing).
+
+---
+
+## Prompt 40 — 2026-11-23
+
+> In testing the website I am being told that the emails and password do not match
+
+**Outcome:** Found and fixed a real bug, and listed the other likely causes.
+- **Bug:** when startup failed on the demo-password check, an empty database file had already been created. The next start saw the file, skipped loading demo data, and ended up with **no accounts**, so every login said "don't match". Reproduced it locally: failed start, 0-byte database, then "That email and password don't match" with the correct password.
+- **Fix:** check the demo password *before* touching the database, and load demo data whenever the database is missing, empty, or has no accounts. Re-ran the same scenario: login now works. 1 new test; 84 pass.
+- **Other things to check on Render:** use the password set in Render's `CALMA_DEMO_PASSWORD`, not the README's `calma-demo-2026`. Emails end in `@example.org` (e.g. `admin@calma.example.org`). Five wrong tries lock that email for 15 minutes. A self-created account can't log in until the admin approves it.
+- Added a note to `DEMO_GUIDE.md` that the demo password is not the README one.
