@@ -601,3 +601,11 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 - **Better 401 message:** it points to the Render log line "AI request failed", where OpenAI's masked version of the received key (first and last characters) can be compared with the real key.
 - 91 tests pass (7 new).
 - **Steps for the user:** redeploy, retry; if it still fails, check Render Logs for "AI request failed" and compare the masked key, then check that the key is unrestricted, in the right project and not deleted, and that the account has credit.
+
+---
+
+## Prompt 44 — 2026-11-23
+
+> It works now
+
+**Outcome:** The Report Builder works on the live Render site. Calma is fully deployed: login, portals, reports and the AI features. Remaining for the user: fill the Render link into the demo guide and send it to colleagues, with the password shared privately.
