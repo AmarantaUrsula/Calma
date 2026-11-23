@@ -1,6 +1,6 @@
 """Calma API: patient, clinic and fund portals.
 
-    cd ataraxia
+    cd calma
     python -m backend.seed                         # create demo data
     uvicorn backend.main:app --port 8020           # run the API
 

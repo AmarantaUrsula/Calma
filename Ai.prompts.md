@@ -270,3 +270,22 @@ Log of the prompts typed while building Calma (originally called Ataraxia), a we
 - **Git:** made `ataraxia/` the repository, linked to the existing GitHub repo (it only had GitHub's starter commit), and removed the empty `Calma` clone folder inside it. Checked the 57 files before committing: no keys, `.env` files, databases, `node_modules` or build output.
 - **Tested locally:** built the app, ran the production server on a fresh database. The pages, assets, API and health check work, unknown API paths return 404, and path-traversal attempts only return the app page. 52 tests pass. Docker isn't installed on this Mac, so the container itself will first be built on Render.
 - README has a "Deploy on Render" section.
+
+---
+
+## Prompt 21 — 2026-11-23
+
+> ok what do I have to do to change the name from ataraxia to calma
+
+**Outcome:** Explained what renaming the folder involves (no changes yet). GitHub (`Calma`) and Render don't care about the local folder name. Locally: stop the two servers, rename `ataraxia/` to `calma/`, update the folder name in the workspace `.claude/launch.json` (2 lines), `README.md` (2 commands), a comment in `backend/main.py`, and Claude's memory notes, then restart the servers. Git history and the Python environment keep working after the move. Offered to do it.
+
+---
+
+## Prompt 22 — 2026-11-23
+
+> Yes, rename it
+
+**Outcome:** Renamed the project folder from `ataraxia/` to **`calma/`**.
+- Stopped both servers, renamed the folder, and updated the folder name in the workspace `.claude/launch.json`, `README.md` setup commands, the comment in `backend/main.py`, and Claude's memory notes. Historical mentions ("formerly Ataraxia") stay in `DESIGN.md` and earlier log entries.
+- Restarted both servers from `calma/`. Checked: the app loads at http://localhost:5178, localhost:8020 redirects to it, the API works through the app, the OpenAI key still loads from the workspace `.env`, and all 52 tests pass. Removed a leftover local production build (ignored by Git) so 8020 keeps redirecting to the live app.
+- Git history moved with the folder and is still connected to GitHub. Committed and pushed the README, comment and log updates.

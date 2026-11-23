@@ -9,7 +9,7 @@ A web app that screens abortion patients for funding support. One short form che
 Pause OneDrive syncing while installing (see `../Semester Project Rules.md`).
 
 ```bash
-cd ataraxia
+cd calma
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m backend.seed                    # (re)create demo data in data/calma.db
@@ -19,7 +19,7 @@ python3 -m venv .venv
 In a second terminal:
 
 ```bash
-cd ataraxia/frontend && npm install && npm run dev  # http://localhost:5178
+cd calma/frontend && npm install && npm run dev  # http://localhost:5178
 ```
 
 Tests: `.venv/bin/python -m pytest -q backend/tests`
