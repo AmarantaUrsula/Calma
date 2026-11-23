@@ -46,3 +46,33 @@ def get_model():
         provider = OpenAIProvider(api_key=key)
     # Responses API: gpt-5.6-luna only supports structured output (tool calls) there.
     return OpenAIResponsesModel(model_name(), provider=provider)
+
+
+def explain_ai_error(e: Exception) -> str:
+    """A plain-English reason an AI call failed, safe to show staff (never includes the key)."""
+    import logging
+
+    from pydantic_ai.exceptions import ModelHTTPError
+
+    log = logging.getLogger("calma.ai")
+    if isinstance(e, RuntimeError) and "API_KEY" in str(e):
+        log.error("AI not configured: %s", e)
+        return "The AI isn't set up on this server: OPENAI_API_KEY is missing. Add it in the host's environment settings."
+    if isinstance(e, ModelHTTPError):
+        detail = ""
+        if isinstance(e.body, dict):
+            detail = str(e.body.get("message") or e.body.get("error", {}).get("message", ""))[:200]
+        log.error("AI request failed: HTTP %s from model %s: %s", e.status_code, e.model_name, detail)
+        reasons = {
+            401: "OpenAI rejected the API key. Check OPENAI_API_KEY in the host's environment settings (no extra spaces, and not a key that was deleted or replaced).",
+            403: "OpenAI says this API key isn't allowed to use this model or project. Check the key's project and permissions.",
+            404: f"OpenAI doesn't recognize the model '{e.model_name}' for this key. Check OPENAI_MODEL.",
+            429: "OpenAI says the usage limit or credit balance was reached, or there were too many requests. Check billing and limits in your OpenAI account, then try again.",
+        }
+        if e.status_code in reasons:
+            return reasons[e.status_code]
+        if e.status_code >= 500:
+            return "OpenAI had a temporary problem. Please try again in a minute."
+        return f"OpenAI returned an error (HTTP {e.status_code})."
+    log.error("AI request failed: %s: %s", type(e).__name__, e)
+    return f"The AI request failed ({type(e).__name__})."

@@ -126,3 +126,17 @@ def test_report_builder_turns_words_into_a_report(client, monkeypatch):
     monkeypatch.setattr(main, "model_for_reports", lambda: TestModel(custom_output_args=fake2))
     d = c.post("/api/reports/ask", headers=h(c, 3), json={"request": "paid out by age"}).json()
     assert d["spec"]["group_by"] == [] and d["spec"]["view"] == "table" and d["notes"]
+
+
+@pytest.mark.parametrize("status,words", [(401, "rejected the API key"), (429, "usage limit"), (404, "model"), (503, "temporary")])
+def test_ai_errors_explain_the_cause(client, monkeypatch, status, words):
+    c, main, _ = client
+    from pydantic_ai.exceptions import ModelHTTPError
+
+    class Broken(TestModel):
+        async def request(self, *a, **k):
+            raise ModelHTTPError(status, "gpt-5.6-luna", {"message": "Incorrect API key provided: sk-abc***xyz"})
+    monkeypatch.setattr(main, "model_for_reports", lambda: Broken())
+    r = c.post("/api/reports/ask", headers=h(c, 8), json={"request": "paid out by fund"})
+    assert r.status_code == 502 and words in r.json()["detail"]
+    assert "sk-" not in r.json()["detail"]  # never echo key fragments back to the browser

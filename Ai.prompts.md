@@ -549,3 +549,14 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 *(Pasted the new deploy log:)* `backend.seed.MissingDemoPassword: CALMA_DEMO_PASSWORD must be at least 10 characters. Change it under this service > Environment, then redeploy.` … `Application startup failed. Exiting.`
 
 **Outcome:** Progress: Render now has `CALMA_DEMO_PASSWORD`, but its value is **shorter than 10 characters**, so startup stops. Fix: change the value under the calma service → Environment to something 10+ characters (a short phrase), save, redeploy. Also split the error messages so each names its real problem: "not set", "set to the public README default" (previously also reported as "not set"), and "at least 10 characters". 1 new test; 79 pass.
+
+---
+
+## Prompt 39 — 2026-11-23
+
+> ok it deployed. Now I am in the app and I wrote in the reporter AI window "make a bar chart of the amount of money disbursed by state and gestation for the last three months" and it gave me the following "The report helper couldn't understand that (ModelHTTPError). Try rephrasing, or use the controls.
+
+**Outcome:** The same request works locally (money paid out over the last 3 months, bar chart), so the request is fine. "ModelHTTPError" means OpenAI refused the call **from Render**, most likely because Render's `OPENAI_API_KEY` is wrong, extra spaces were pasted, the key was deleted or replaced, or the account is out of credit.
+- **Clearer AI errors:** AI failures now explain the cause in plain English: key rejected (401), not allowed (403), unknown model (404), usage limit or credit (429), OpenAI temporarily down (5xx), or key missing. Applies to the Report Builder, the rules extractor and the website check. Details go to the server log, never key fragments. 4 new tests.
+- **"State" fix:** the agent had read "state" as state of care. Plain "state" now means the patient's home state, and "gestation" maps to weeks pregnant. Live retest: home state, then weeks pregnant, bar chart, Aug 23–Nov 23.
+- 83 tests pass. Next step for the user: redeploy, retry, and read the new message (likely: check `OPENAI_API_KEY` in Render's Environment tab, or OpenAI billing).

@@ -53,6 +53,8 @@ Date bases: {', '.join(f"{k} = {v}" for k, v in DATE_BASES.items())}.
 Criteria you may group by (use these ids only, at most 3):
 {dims}
 "Over time", "by month", "trend", "monthly" -> month. "Weekly" -> week. "Travel help vs procedure" -> help_type.
+"State" on its own means the patient's home state (home_state); use care_state only for "state of care",
+"where care happened" or "clinic state". "Gestation", "weeks", "how far along" -> weeks_band.
 
 Chart rules: pie only with exactly 1 criterion (best for shares of a whole, up to ~6 slices);
 bar for comparisons with 1 or 2 criteria (put time first if time is one of them);

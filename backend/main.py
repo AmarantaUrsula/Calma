@@ -849,7 +849,7 @@ async def admin_extract(fund_id: int, body: ExtractBody, user: User = Depends(re
                                             model_for_extraction())
     except Exception as e:  # model/network errors: tell the admin, never apply anything
         audit(db, f"user:{user.id}", "rules_extract_failed", detail={"fund_id": fund_id, "error": type(e).__name__})
-        raise HTTPException(502, f"The AI helper couldn't read this text ({type(e).__name__}). Nothing was changed.")
+        raise HTTPException(502, f"The AI helper couldn't read this text: {llm.explain_ai_error(e)} Nothing was changed.")
     return proposal_out(db, criteria_id)
 
 
@@ -1392,7 +1392,7 @@ async def report_ask(body: AskBody, user: User = Depends(current_user), db: sqli
     try:
         spec, notes = await report_agent.build_spec(body.request, user.role, clock.today(), model_for_reports())
     except Exception as e:
-        raise HTTPException(502, f"The report helper couldn't understand that ({type(e).__name__}). Try rephrasing, or use the controls.")
+        raise HTTPException(502, f"The report helper couldn't run: {llm.explain_ai_error(e)} You can still use the controls below.")
     p = ReportParams(measure=spec.measure, date_basis=spec.date_basis, start=spec.start, end=spec.end, group_by=spec.group_by)
     _, result = _run(db, user, p)
     audit(db, f"user:{user.id}", "report_builder_used", detail={"group_by": p.group_by, "view": spec.view})

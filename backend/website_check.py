@@ -235,7 +235,8 @@ async def check_fund(db: sqlite3.Connection, fund_id: int, model: Any, trigger: 
     try:
         criteria_id = await create_proposal(db, fund_id, text, url, trigger, model)
     except Exception as e:
-        return done("error", f"{what}, but the AI helper failed ({type(e).__name__}). Will retry next time.", text=text)
+        from .llm import explain_ai_error
+        return done("error", f"{what}, but the AI helper failed: {explain_ai_error(e)} Will retry next time.", text=text)
 
     ev = json.loads(db.execute("SELECT evidence FROM fund_criteria WHERE id = ?", (criteria_id,)).fetchone()[0])
     needs_review = [k for k, v in ev.items() if not k.startswith("_") and v.get("status") in ("changed", "needs_manual")]
