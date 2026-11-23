@@ -124,6 +124,12 @@ Every demo account uses the made-up password **`calma-demo-2026`** (it's set in 
     - **Remove** ends a partnership. Patients still waiting on that fund at that clinic are declined so their cases don't stall; already-approved pledges stay and can still be marked paid.
     - Clinics can end a partnership too, but not with their own fund. Everything is audit-logged.
 
+16. **Real funds (reference only):** Admin also tracks four **real** abortion funds' public eligibility pages:
+    - **Carolina Abortion Fund:** its own "Request Funding" page
+    - **West Fund**, **Faith Roots Abortion Fund** and **Mariposa Fund:** their National Network of Abortion Funds profile pages
+
+    They're labeled "Real fund · reference only". They have **no partner clinics and no accounts**, so they're never matched with the made-up demo patients. Their rules start empty. The website check reads each page and the AI suggests rules (with quotes) for an admin to review. A real pledge amount must be entered before approval, since these funds don't publish one. Calma reads these pages rarely (every 60 days), identifies itself, and follows each site's robots.txt.
+
 ## AI setup
 
 - The model comes from `OPENAI_MODEL` (default `gpt-5.6-luna`), through OpenAI's Responses API.

@@ -111,7 +111,7 @@ def test_ai_failure_is_recorded_and_retried(env):
 
 def test_due_funds_respect_interval(env):
     conn, _ = env
-    assert website_check.due_fund_ids(conn) == [3, 4, 5, 6, 7, 8]
+    assert website_check.due_fund_ids(conn) == [3, 4, 5, 6, 7, 8, 10, 11, 12, 13]  # incl. real reference funds
     run_one(conn, SAME)
     assert 3 not in website_check.due_fund_ids(conn)
     clock.freeze(datetime(2026, 11, 22, 15, tzinfo=timezone.utc) + timedelta(days=61))
@@ -132,3 +132,32 @@ def test_admin_routes(env, monkeypatch):
     data = c.get("/api/admin/website-checks", headers=h).json()
     assert data["interval_days"] == 60 and data["checks"][0]["status"] == "rules_same"
     assert next(f for f in data["funds"] if f["id"] == 3)["policy_url"] == "https://example.org/help"
+
+
+def test_real_reference_funds_are_tracked_but_never_matched(env, monkeypatch):
+    conn, _ = env
+    from backend import main
+    c = TestClient(main.app)
+    admin = {"Authorization": "Bearer " + c.post("/api/auth/login", json=demo_credentials(8)).json()["token"]}
+    funds = {f["id"]: f for f in c.get("/api/admin/funds", headers=admin).json()}
+    assert funds[10]["name"] == "Carolina Abortion Fund" and funds[10]["reference_only"] and funds[10]["version"] is None
+    checks = {f["id"]: f for f in c.get("/api/admin/website-checks", headers=admin).json()["funds"]}
+    assert checks[10]["policy_url"].startswith("https://www.carolinaabortionfund.org/")
+    # not offered at sign-up, not matched with demo patients
+    orgs = c.get("/api/auth/organizations").json()
+    assert all(f["id"] < 10 for f in orgs["funds"])
+    assert c.post("/api/auth/signup", json={"first_name": "A", "last_name": "B", "email": "a@example.org",
+                  "password": "long enough phrase", "confirm_password": "long enough phrase",
+                  "role": "fund", "org_id": 10}).status_code == 422
+    # first check of a real page (fake model here): the suggestion goes to review, nothing goes live
+    real = {"summary": "NC/SC", "states": {"stated": True, "value": ["NC", "SC"], "quote": "North and South Carolina"},
+            "income_max_fpl_pct": {"stated": True, "no_limit": True, "quote": "no income requirements"},
+            "gest_min_weeks": {"stated": False}, "gest_max_weeks": {"stated": False}, "requires_travel": {"stated": False},
+            "max_age": {"stated": False}, "pledge": {"stated": False}, "other_requirements": []}
+
+    async def fake_fetch(url):
+        return "We fund callers in North and South Carolina. We have no income requirements. " * 5
+    monkeypatch.setattr(website_check, "fetch_text", fake_fetch)
+    r = asyncio.run(website_check.check_fund(conn, 10, TestModel(custom_output_args=real)))
+    assert r.status == "proposal_created", r.note
+    assert conn.execute("SELECT COUNT(*) FROM fund_criteria WHERE fund_id = 10 AND status = 'approved'").fetchone()[0] == 0

@@ -346,3 +346,42 @@ Checked every text/background pair against WCAG AA: all at least 4.5:1. Two colo
 - **Tested:** 68 automated tests pass (16 new). They cover hashing, salts, the pepper, settings stored in the hash, the password and hash never appearing in responses, identical errors, lockout, sign-up checks, approval, reject, disable, and that nobody can self-approve as admin.
 - **Browser check:** created a brand-new account (Taylor Morgan, Heartland Access Fund). Login was blocked while pending; the admin logged in and approved it; Taylor then logged in and landed in the Heartland fund portal. The database holds only a `scrypt$…` hash for it.
 - **Also fixed:** new routes had been added after the catch-all route that serves the app's pages, which hid them. The catch-all is now last.
+
+---
+
+## Prompt 25 — 2026-11-23
+
+> Is there any way we can add a real abortion fund to the fund website checks?
+
+**Outcome:** Yes, possible; the website check already accepts real `https://` links. Nothing added to the app yet (waiting for a go-ahead).
+- **Fetch test:** found real funds with public pages and tried Calma's fetcher on them. All loaded, and their robots.txt files allow it: Carolina Abortion Fund's own "Request Funding" page, plus National Network of Abortion Funds (NNAF) profile pages for West Fund (NM/TX), Faith Roots Abortion Fund (travel help for people coming to NM) and Mariposa Fund (NM, people affected by the immigration system).
+- **Live AI test** on Carolina Abortion Fund's page (not saved). It correctly read:
+  - **States and income:** NC/SC; no income requirement
+  - **Type of help:** pays toward the procedure
+  - **Notes:** "must have a scheduled appointment" and "doesn't fund every clinic"
+
+  It flagged the pledge amount for a person to fill in, because the page doesn't publish one. Every quote was found word-for-word on the page.
+- **Gap the real page revealed:** Carolina funds people who live in NC/SC **or** have an appointment there. Calma's rules can only use one of those today.
+- **Proposed approach:** add real funds as **reference-only** funds (no clinic partnerships, so they're never matched with the made-up demo patients), checked on the same schedule. Optionally add a "lives in **or** gets care in" rule.
+
+---
+
+## Prompt 26 — 2026-11-23
+
+> Yes, add them
+
+**Outcome:** Added four **real abortion funds** as reference-only funds in the website checks:
+- **Carolina Abortion Fund:** its own "Request Funding" page
+- **West Fund**, **Faith Roots Abortion Fund**, **Mariposa Fund:** their NNAF profile pages
+
+Details:
+- **Data model:** new `funds.reference_only` flag. Reference funds have no partner clinics and no accounts. They're hidden from the sign-up list, excluded from matching, and their rules start empty, so the first check suggests rules for an admin to review. A brand-new fund's suggestion stores a placeholder pledge, and approval still requires a real amount.
+- **Admin:** "Real fund · reference only" badges. Funds without reviewed rules say so and point to the website check.
+- **Live run:** after a restart, the scheduler checked all four real pages by itself and created a suggestion for each. Every quote was found word-for-word on the real pages.
+  - **Carolina:** NC/SC, no income requirement, procedure help; pledge amount flagged for a person to fill in.
+  - **West Fund:** NM/TX residents.
+  - **Faith Roots:** practical help (lodging, transport, meals) for care in NM.
+  - **Mariposa:** care in NM/TN, plus an immigration-status requirement noted as "other".
+  - Left all four waiting for the user's review rather than approving them.
+- **Gaps the real pages revealed** (noted in `DESIGN.md`): "lives in **or** gets care in" (the AI picked "care" for Carolina, which is only half right), identity-based eligibility, and funds that only pay at specific clinics.
+- **Tested:** 69 automated tests pass (1 new: real funds are tracked but never offered at sign-up or matched, and the first check goes to review without going live). Also fixed a database error for brand-new funds with no pledge amount.

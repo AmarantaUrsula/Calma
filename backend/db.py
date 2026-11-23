@@ -192,7 +192,12 @@ ADDED_COLUMNS: dict[str, list[tuple[str, str]]] = {
         ("no_insurance_only", "INTEGER NOT NULL DEFAULT 0"),    # only helps if insurance doesn't cover abortion
         ("extra_questions", "TEXT NOT NULL DEFAULT '[]'"),      # optional intake questions this fund wants asked
     ],
-    "funds": [("policy_url", "TEXT")],
+    "funds": [
+        ("policy_url", "TEXT"),
+        # Real funds tracked for their public rules only: never partnered with the made-up demo clinics,
+        # never matched with demo patients, no staff accounts.
+        ("reference_only", "INTEGER NOT NULL DEFAULT 0"),
+    ],
     "clinics": [("extra_questions", "TEXT NOT NULL DEFAULT '[]'")],
     "cases": [
         ("care_state", "TEXT"),                     # from the clinic's location, not asked

@@ -187,7 +187,8 @@ def clinic_fund_ids(db: sqlite3.Connection, clinic_id: int) -> list[int]:
     """The clinic's own funds plus every partner fund."""
     rows = db.execute(
         """SELECT id FROM funds WHERE owner_clinic_id = ?
-           UNION SELECT fund_id FROM clinic_fund_partnerships WHERE clinic_id = ? AND status = 'accepted'""",
+           UNION SELECT p.fund_id FROM clinic_fund_partnerships p JOIN funds f ON f.id = p.fund_id
+                 WHERE p.clinic_id = ? AND p.status = 'accepted' AND f.reference_only = 0""",
         (clinic_id, clinic_id),
     ).fetchall()
     return [r[0] for r in rows]
@@ -350,7 +351,7 @@ def _new_session(user_id: int) -> str:
 def organizations(db: sqlite3.Connection = Depends(get_db)) -> dict:
     """For the create-account form: which clinic or fund do you work for?"""
     clinics = db.execute("SELECT id, name, city, state FROM clinics ORDER BY name").fetchall()
-    funds = db.execute("SELECT id, name FROM funds WHERE kind = 'independent' ORDER BY name").fetchall()
+    funds = db.execute("SELECT id, name FROM funds WHERE kind = 'independent' AND reference_only = 0 ORDER BY name").fetchall()
     return {"clinics": [dict(c) for c in clinics], "funds": [dict(f) for f in funds]}
 
 
@@ -385,7 +386,7 @@ def signup(body: SignupBody, db: sqlite3.Connection = Depends(get_db)) -> dict:
             raise HTTPException(422, "Please choose your clinic.")
         clinic_id = body.org_id
     elif body.role == "fund":
-        if not body.org_id or not db.execute("SELECT 1 FROM funds WHERE id = ? AND kind = 'independent'", (body.org_id,)).fetchone():
+        if not body.org_id or not db.execute("SELECT 1 FROM funds WHERE id = ? AND kind = 'independent' AND reference_only = 0", (body.org_id,)).fetchone():
             raise HTTPException(422, "Please choose your fund.")
         fund_id = body.org_id
     if db.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
@@ -808,13 +809,13 @@ def fund_mark_paid(pledge_id: int, user: User = Depends(require("fund")), db: sq
 @app.get("/api/admin/funds")
 def admin_funds(user: User = Depends(require("admin")), db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
     rows = db.execute(
-        """SELECT f.id, f.name, f.kind, f.monthly_limit, f.description, c.*
-           FROM funds f JOIN fund_criteria c ON c.fund_id = f.id AND c.status = 'approved'
-           ORDER BY f.kind, f.name"""
+        """SELECT f.id, f.name, f.kind, f.monthly_limit, f.description, f.reference_only, c.*
+           FROM funds f LEFT JOIN fund_criteria c ON c.fund_id = f.id AND c.status = 'approved'
+           ORDER BY f.reference_only, f.kind, f.name"""
     ).fetchall()
     return [{"id": r[0], "name": r["name"], "kind": r["kind"], "monthly_limit": r["monthly_limit"],
-             "description": r["description"], "version": r["version"], "last_verified_at": r["last_verified_at"],
-             "verified_by": r["verified_by"], **row_to_rules(r)} for r in rows]
+             "description": r["description"], "reference_only": bool(r["reference_only"]), "version": r["version"],
+             "last_verified_at": r["last_verified_at"], "verified_by": r["verified_by"], **row_to_rules(r)} for r in rows]
 
 
 @app.get("/api/admin/audit")
@@ -958,7 +959,7 @@ from . import website_check  # noqa: E402
 
 def _fund_check_rows(db: sqlite3.Connection) -> list[dict]:
     rows = db.execute(
-        """SELECT f.id, f.name, f.kind, f.policy_url,
+        """SELECT f.id, f.name, f.kind, f.policy_url, f.reference_only,
                   (SELECT checked_at FROM page_checks WHERE fund_id = f.id ORDER BY id DESC LIMIT 1) AS last_checked_at,
                   (SELECT status FROM page_checks WHERE fund_id = f.id ORDER BY id DESC LIMIT 1) AS last_status
            FROM funds f ORDER BY f.kind, f.name"""

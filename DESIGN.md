@@ -30,6 +30,13 @@ Based on the product description and flowchart (`design-flowchart.webp`).
     - **Login protection:** one generic error message, and a 15-minute lockout after 5 misses. Session tokens are kept only as hashes.
     - **Not built yet:** password reset, email verification and two-factor login.
 
+15. **Real funds as reference (2026-11-23):** four real funds (Carolina Abortion Fund, West Fund, Faith Roots Abortion Fund, Mariposa Fund) are tracked for their public eligibility pages only (`funds.reference_only = 1`): no partnerships, no accounts, never matched with demo patients. The first live run showed the AI reads real pages well (all quotes verified). It also revealed gaps in the rules model:
+    - "lives in **or** gets care in" a state (Carolina)
+    - identity-based eligibility (Mariposa: people affected by the immigration system)
+    - funds that only pay at specific clinics
+
+    These are candidates for future rule options.
+
 ## Guiding principle: the AI never decides who gets money
 
 Eligibility and pledge amounts must be **deterministic, auditable rules**, not LLM output. These decisions move real money for a vulnerable population. Every result must be explainable ("matched because: lives in TX, income ≤ 200% FPL"), and the same input must always give the same answer. So the **matching engine is plain Python code, not an agent**. Agents go where language is the hard part: turning messy fund policies into rules, explaining things in plain words, and summarizing cases for staff.

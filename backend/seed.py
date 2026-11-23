@@ -32,6 +32,30 @@ FUNDS = [
     (8, "Enchanted Circle Care Fund", "independent", None, 4000, "Fictional fund for anyone getting care in New Mexico, wherever they live."),
 ]
 
+# Real abortion funds, tracked for their PUBLIC eligibility pages only (reference_only = 1).
+# They are never partnered with the made-up clinics or matched with demo patients, and have no
+# accounts. Their rules start empty: the first website check suggests rules for an admin to review.
+REAL_FUNDS = [
+    (10, "Carolina Abortion Fund", "Real fund (reference only). North and South Carolina.",
+     "https://www.carolinaabortionfund.org/get-help"),
+    (11, "West Fund", "Real fund (reference only). New Mexico and Texas. Page: NNAF profile.",
+     "https://abortionfunds.org/fund/west-fund/"),
+    (12, "Faith Roots Abortion Fund", "Real fund (reference only). Travel help for people coming to New Mexico. Page: NNAF profile.",
+     "https://abortionfunds.org/fund/faith-roots-abortion-fund/"),
+    (13, "Mariposa Fund", "Real fund (reference only). New Mexico; people affected by the immigration system. Page: NNAF profile.",
+     "https://abortionfunds.org/fund/mariposa-fund/"),
+]
+
+
+def add_real_funds(conn) -> None:
+    for fid, name, desc, url in REAL_FUNDS:
+        conn.execute(
+            """INSERT OR IGNORE INTO funds (id, name, kind, owner_clinic_id, monthly_limit, description, policy_url, reference_only)
+               VALUES (?, ?, 'independent', NULL, NULL, ?, ?, 1)""",
+            (fid, name, desc, url),
+        )
+
+
 # Demo eligibility "websites": files in data/demo_pages/ (edit one to simulate a fund changing its site).
 # Clinic funds have no public page; their rules are set by the clinic.
 POLICY_URLS = {
@@ -104,6 +128,7 @@ def seed(conn) -> None:
         FUNDS,
     )
     conn.executemany("UPDATE funds SET policy_url = ? WHERE id = ?", [(u, i) for i, u in POLICY_URLS.items()])
+    add_real_funds(conn)
     conn.executemany(
         """INSERT INTO clinic_fund_partnerships (clinic_id, fund_id, status, requested_by, created_at, accepted_at)
            VALUES (?, ?, 'accepted', 'seed', ?, ?)""",

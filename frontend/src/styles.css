@@ -238,3 +238,4 @@ h2.sub { margin-top: 14px; }
 .auth-btn { width: 100%; padding: 12px; font-size: 16px; margin: 8px 0 6px; }
 .two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 480px) { .two-fields { grid-template-columns: 1fr; } }
+.badge.real { color: var(--heading); border-color: rgba(123, 82, 54, .45); background: rgba(123, 82, 54, .07); margin-top: 3px; }

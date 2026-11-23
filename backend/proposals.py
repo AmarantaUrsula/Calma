@@ -33,10 +33,18 @@ def row_to_rules(r: sqlite3.Row | dict) -> dict:
     return out
 
 
+# Columns that can't be empty in the database. A suggestion for a brand-new fund may not know
+# these yet (e.g. a real fund that doesn't publish a pledge amount): store a placeholder. The
+# admin still has to enter a real pledge amount before approving (approval requires $1 or more).
+_PLACEHOLDERS = {"pledge_kind": "fixed", "pledge_value": 0, "state_basis": "residence", "support_type": "procedure"}
+
+
 def _db_values(values: dict) -> list:
     out = []
     for k in RULE_FIELDS:
         v = values.get(k, RULE_DEFAULTS.get(k))
+        if v is None and k in _PLACEHOLDERS:
+            v = _PLACEHOLDERS[k]
         if k in _JSON:
             v = json.dumps(v or [])
         elif k in _BOOL:

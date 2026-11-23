@@ -3,7 +3,8 @@ import { api, errText, money } from "../api";
 import { StaffShell } from "./Staff";
 
 type FundRow = {
-  id: number; name: string; kind: string; monthly_limit: number | null; description: string; version: number;
+  id: number; name: string; kind: string; monthly_limit: number | null; description: string; version: number | null;
+  reference_only: boolean;
   states: string[]; income_max_fpl_pct: number | null; gest_min_weeks: number | null; gest_max_weeks: number | null;
   requires_travel: number; max_age: number | null; pledge_kind: string; pledge_value: number; pledge_cap: number | null;
   last_verified_at: string; verified_by: string; state_basis: string; support_type: string; no_insurance_only: boolean;
@@ -84,9 +85,15 @@ export default function Admin() {
         <table className="grid">
           <thead><tr><th>Fund</th><th>Type</th><th>States</th><th>Income limit</th><th>Weeks</th><th>Other</th><th>Pledge</th><th className="num">Monthly limit</th><th>Version</th><th /></tr></thead>
           <tbody>
-            {funds.map((f) => (
+            {funds.map((f) => f.version == null ? (
               <tr key={f.id}>
-                <td>{f.name}</td>
+                <td>{f.name}{f.reference_only && <div><span className="badge real">Real fund · reference only</span></div>}</td>
+                <td colSpan={8} className="muted small">No reviewed rules yet. Run a website check below; the AI's suggestion will appear at the top of this page for you to review.</td>
+                <td>{proposals.some((p) => p.fund_id === f.id) ? <span className="badge pending">Review above</span> : <button className="btn ghost small-btn" onClick={() => setUpdating(f)}>Update rules</button>}</td>
+              </tr>
+            ) : (
+              <tr key={f.id}>
+                <td>{f.name}{f.reference_only && <div><span className="badge real">Real fund · reference only</span></div>}</td>
                 <td>{f.kind === "clinic" ? "Clinic fund" : "Independent"}</td>
                 <td>{f.states.includes("*") ? "Any" : [...f.states].sort().join(", ")}{f.state_basis === "care" && <div className="muted small">state of care</div>}</td>
                 <td>{f.income_max_fpl_pct != null ? `≤ ${f.income_max_fpl_pct}% FPL` : "—"}</td>
@@ -248,7 +255,7 @@ function Review({ p, onDone }: { p: Proposal; onDone: () => void }) {
   );
 }
 
-type CheckFund = { id: number; name: string; kind: string; policy_url: string | null; last_checked_at: string | null; last_status: string | null; next_check_at: string | null };
+type CheckFund = { id: number; name: string; kind: string; policy_url: string | null; reference_only: number | boolean; last_checked_at: string | null; last_status: string | null; next_check_at: string | null };
 type CheckRow = { id: number; fund_id: number; fund_name: string; url: string; checked_at: string; trigger: string; status: string; note: string; criteria_id: number | null };
 
 const CHECK_LABEL: Record<string, string> = {
@@ -278,7 +285,7 @@ function WebsiteChecks({ onChange }: { onChange: () => void }) {
     <div className="card">
       <div className="pledge-head">
         <h2>Fund website checks</h2>
-        <span className="muted small">Every {data.interval_days} days, Calma re-reads each fund's eligibility page. If the page changed, the AI suggests updates for you to review. Nothing changes without you.</span>
+        <span className="muted small">Every {data.interval_days} days, Calma re-reads each fund's eligibility page. If the page changed, the AI suggests updates for you to review. Nothing changes without you. Real funds are tracked for their public rules only: they're never matched with the made-up demo patients.</span>
         <button className="btn small-btn right" disabled={!!busy} onClick={() => act("due", () => api("/api/admin/website-checks/run-due", { method: "POST" }))}>
           {busy === "due" ? "Checking…" : "Run due checks now"}
         </button>
@@ -289,7 +296,7 @@ function WebsiteChecks({ onChange }: { onChange: () => void }) {
         <tbody>
           {withLinks.map((f) => (
             <tr key={f.id}>
-              <td>{f.name}</td>
+              <td>{f.name}{!!f.reference_only && <div><span className="badge real">Real fund · reference only</span></div>}</td>
               <td className="small">
                 {editing === f.id ? (
                   <span className="decide">
