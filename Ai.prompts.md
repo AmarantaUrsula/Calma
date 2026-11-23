@@ -478,3 +478,19 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 - **Notes:**
   - After the folder rename, the virtual environment's `pip` command still points at the old `ataraxia` path, so I used `.venv/bin/python -m pip`.
   - "Try Calma.docx", which the user added on GitHub, is missing from the local folder. I didn't restore it or commit its deletion.
+
+---
+
+## Prompt 32 — 2026-11-23
+
+> Leave it
+
+**Outcome:** Left "Try Calma.docx" as is: it's on GitHub, not in the local folder, and won't be restored. Future commits will keep including only specific files, so the missing local copy is never pushed as a deletion.
+
+---
+
+## Prompt 33 — 2026-11-23
+
+> ok are we ready to commit?
+
+**Outcome:** Yes. All feature work was already committed and pushed. The only uncommitted change was this prompt log, so I committed and pushed it, leaving out the missing local "Try Calma.docx" so it stays on GitHub. Tests: 78 passing.
