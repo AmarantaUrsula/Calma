@@ -385,3 +385,17 @@ Details:
   - Left all four waiting for the user's review rather than approving them.
 - **Gaps the real pages revealed** (noted in `DESIGN.md`): "lives in **or** gets care in" (the AI picked "care" for Carolina, which is only half right), identity-based eligibility, and funds that only pay at specific clinics.
 - **Tested:** 69 automated tests pass (1 new: real funds are tracked but never offered at sign-up or matched, and the first check goes to review without going live). Also fixed a database error for brand-new funds with no pledge amount.
+
+---
+
+## Prompt 27 — 2026-11-23
+
+> Yes, add it
+>
+> *(Context: "it" = an eligibility option for funds that serve people who live in a state **or** get care there, like Carolina Abortion Fund.)*
+
+**Outcome:** Added a third eligibility option: **"lives in or gets care in"** (`state_basis = "either"`).
+- **Matching:** a patient qualifies if the state they live in **or** the clinic's state is on the fund's list. The reasons say which one matched; if neither, the reason names both states.
+- **Fund and clinic rules editors:** new "**Either one**: lives there or gets care there" choice, with a clearer states heading. The admin review dropdown and the rules tables show it too.
+- **AI extractor:** now knows the "either" option. A live re-read of Carolina Abortion Fund's page picked "either", quoting the page: callers who live in NC or SC "and/or have an appointment" there. Refreshed Carolina's waiting suggestion with it (still waiting for the user's review, not approved).
+- **Tested:** 71 automated tests pass (2 new: lives-in match, gets-care-in match, neither, plus the extractor accepting "either"). Browser: Carolina's review shows "Lives in or gets care in" with the quote.

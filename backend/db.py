@@ -183,7 +183,7 @@ ADDED_COLUMNS: dict[str, list[tuple[str, str]]] = {
     "fund_criteria": [
         ("evidence", "TEXT"),                       # AI-extracted quotes for a proposed version
         ("proposed_by", "TEXT"),
-        ("state_basis", "TEXT NOT NULL DEFAULT 'residence'"),   # 'residence' or 'care' (state where the abortion happens)
+        ("state_basis", "TEXT NOT NULL DEFAULT 'residence'"),   # 'residence', 'care' (state where the abortion happens) or 'either'
         ("support_type", "TEXT NOT NULL DEFAULT 'procedure'"),  # 'procedure' (toward the clinic bill) or 'practical' (travel, food, lodging, childcare)
         ("rate_per_mile_cents", "INTEGER"),         # practical support: per round-trip mile
         ("rate_per_night", "INTEGER"),              # practical support: lodging per night

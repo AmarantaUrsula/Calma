@@ -887,7 +887,7 @@ class RuleValues(BaseModel):
     pledge_kind: Literal["fixed", "percent"] = "fixed"
     pledge_value: int = Field(default=0, ge=0)
     pledge_cap: int | None = Field(default=None, ge=1)
-    state_basis: Literal["residence", "care"] = "residence"
+    state_basis: Literal["residence", "care", "either"] = "residence"
     support_type: Literal["procedure", "practical"] = "procedure"
     rate_per_mile_cents: int | None = Field(default=None, ge=0, le=500)
     rate_per_night: int | None = Field(default=None, ge=0, le=1000)

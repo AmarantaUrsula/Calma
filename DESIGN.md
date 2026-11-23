@@ -18,7 +18,7 @@ Based on the product description and flowchart (`design-flowchart.webp`).
     - **Asked for the first day of the last period** (weeks are computed at the appointment date, and only weeks are stored), with a weeks fallback.
     - **Age instead of date of birth,** and **state of care taken from the clinic** rather than asked. Both reduce what we store. *Confirmed by the product owner on 2026-11-23: keep it this way.*
     - **Contact details are clinic-only:** never shown to funds, never sent to AI, deleted when the case closes.
-11. **Fund types (2026-11-23):** eligibility can be by **state of residence or state of care**. Help can be **procedure** money (stacks toward the clinic bill, capped at its cost) or **practical support** (rates × the patient's travel answers, capped; paid to the patient, not part of reimbursement). Funds can also require **no insurance coverage**.
+11. **Fund types (2026-11-23):** eligibility can be by **state of residence, state of care, or either one** (added 2026-11-23 after the real Carolina page). Help can be **procedure** money (stacks toward the clinic bill, capped at its cost) or **practical support** (rates × the patient's travel answers, capped; paid to the patient, not part of reimbursement). Funds can also require **no insurance coverage**.
 
 12. **Partnerships (2026-11-23):** a fund requests a partnership with a clinic and the clinic accepts (two-sided, since the clinic is the hub). Only accepted partnerships drive matching, question plans and fund visibility. Ending a partnership declines that fund's pending pledges at the clinic but keeps approved ones payable.
 
@@ -31,7 +31,7 @@ Based on the product description and flowchart (`design-flowchart.webp`).
     - **Not built yet:** password reset, email verification and two-factor login.
 
 15. **Real funds as reference (2026-11-23):** four real funds (Carolina Abortion Fund, West Fund, Faith Roots Abortion Fund, Mariposa Fund) are tracked for their public eligibility pages only (`funds.reference_only = 1`): no partnerships, no accounts, never matched with demo patients. The first live run showed the AI reads real pages well (all quotes verified). It also revealed gaps in the rules model:
-    - "lives in **or** gets care in" a state (Carolina)
+    - "lives in **or** gets care in" a state (Carolina). *Added 2026-11-23 as a third state-basis option, "either".*
     - identity-based eligibility (Mariposa: people affected by the immigration system)
     - funds that only pay at specific clinics
 

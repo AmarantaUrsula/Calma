@@ -5,7 +5,7 @@ import { STATE_NAMES } from "../states";
 export type Rules = {
   states: string[]; income_max_fpl_pct: number | null; gest_min_weeks: number | null; gest_max_weeks: number | null;
   requires_travel: boolean; max_age: number | null; pledge_kind: "fixed" | "percent"; pledge_value: number;
-  pledge_cap: number | null; state_basis: "residence" | "care"; support_type: "procedure" | "practical";
+  pledge_cap: number | null; state_basis: "residence" | "care" | "either"; support_type: "procedure" | "practical";
   rate_per_mile_cents: number | null; rate_per_night: number | null; rate_per_meal_day: number | null;
   rate_per_childcare_day: number | null; no_insurance_only: boolean; extra_questions: string[];
 };
@@ -45,7 +45,7 @@ function describe(k: keyof Rules, v: unknown, r: Rules): string {
   if (k === "pledge_kind") return v === "fixed" ? "Set dollar amount" : "Share of the cost";
   if (k === "pledge_value") return r.pledge_kind === "fixed" ? money(v as number) : `${v}%`;
   if (k === "pledge_cap") return money(v as number);
-  if (k === "state_basis") return v === "care" ? "State where care happens" : "State where patient lives";
+  if (k === "state_basis") return v === "care" ? "State where care happens" : v === "either" ? "Lives in or gets care in" : "State where patient lives";
   if (k === "support_type") return v === "practical" ? "Travel & practical support" : "Toward the procedure";
   if (k === "rate_per_mile_cents") return `$${((v as number) / 100).toFixed(2)}/mile`;
   if (k === "rate_per_night" || k === "rate_per_meal_day" || k === "rate_per_childcare_day") return money(v as number);
@@ -120,8 +120,9 @@ export default function FundRules({ view, onSaved, base = "/api/fund/rules" }: {
         <div className="decide">
           <label className="check-inline"><input type="radio" name="sb" checked={r.state_basis === "residence"} onChange={() => set({ state_basis: "residence" })} /> Where the patient <strong>lives</strong></label>
           <label className="check-inline"><input type="radio" name="sb" checked={r.state_basis === "care"} onChange={() => set({ state_basis: "care" })} /> Where the abortion <strong>happens</strong> (the clinic's state)</label>
+          <label className="check-inline"><input type="radio" name="sb" checked={r.state_basis === "either"} onChange={() => set({ state_basis: "either" })} /> <strong>Either one</strong>: lives there or gets care there</label>
         </div>
-        <h2 className="sub">{r.state_basis === "care" ? "Clinics in which states?" : "Patients from which states?"}</h2>
+        <h2 className="sub">{r.state_basis === "care" ? "Clinics in which states?" : r.state_basis === "either" ? "Which states? (living there or getting care there both count)" : "Patients from which states?"}</h2>
         <label className="check-inline">
           <input type="checkbox" checked={anyState} onChange={(e) => set({ states: e.target.checked ? ["*"] : [] })} /> Any state
         </label>

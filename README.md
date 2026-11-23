@@ -115,7 +115,7 @@ Every demo account uses the made-up password **`calma-demo-2026`** (it's set in 
     - **Clinics:** **Intake questions** tab. See every question, whether it's asked and why, and turn on extras (including contact details, which only the clinic ever sees and which are deleted when the case closes).
     - **Funds:** **My eligibility rules** → **Extra questions to ask patients**. Answers show on each patient card. A fund only sees answers to questions it needs or asked for.
 14. **State of care & practical support:**
-    - **State of care:** a fund can base eligibility on where the abortion happens (the clinic's state) instead of where the patient lives. In the demo, Enchanted Circle covers anyone getting care in New Mexico.
+    - **Which state counts:** a fund can base eligibility on where the patient lives, where the abortion happens (the clinic's state), or **either one**: "lives in or gets care in", like the real Carolina Abortion Fund. In the demo, Enchanted Circle covers anyone getting care in New Mexico.
     - **Practical support:** a fund can give travel help instead of procedure money: per-mile, per-night, meals and dependent-care rates, a flat amount and a cap. In the demo, this is Open Road. That help is shown separately from the clinic bill, isn't part of reimbursement, and can be marked provided before the visit.
     - **Insurance:** a fund can limit help to patients whose insurance doesn't cover abortion.
 

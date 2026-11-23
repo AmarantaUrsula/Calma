@@ -120,3 +120,10 @@ def test_reject_leaves_rules_alone(client):
     assert client.post(f"/api/admin/proposals/{p['id']}/reject", headers=admin).status_code == 200
     row = next(f for f in client.get("/api/admin/funds", headers=admin).json() if f["id"] == 3)
     assert row["version"] == 1 and sorted(row["states"]) == ["AZ", "NM", "TX"]
+
+
+def test_extractor_accepts_either_state_basis():
+    ex = ExtractedCriteria.model_validate({**FAKE, "state_basis": {"stated": True, "value": "either",
+        "quote": "helps people who live in Texas, New Mexico, Arizona, or Colorado"}})
+    proposed, ev = build_proposal({"state_basis": "residence"}, ex, POLICY)
+    assert proposed["state_basis"] == "either" and ev["state_basis"]["status"] == "changed"

@@ -13,7 +13,7 @@ type AuditRow = { id: number; at: string; actor: string; action: string; case_id
 type Rules = {
   states: string[]; income_max_fpl_pct: number | null; gest_min_weeks: number | null; gest_max_weeks: number | null;
   requires_travel: boolean; max_age: number | null; pledge_kind: "fixed" | "percent"; pledge_value: number;
-  pledge_cap: number | null; state_basis: "residence" | "care"; support_type: "procedure" | "practical";
+  pledge_cap: number | null; state_basis: "residence" | "care" | "either"; support_type: "procedure" | "practical";
   no_insurance_only: boolean;
 };
 type Evidence = { status: "changed" | "same" | "not_stated" | "needs_manual"; quote: string | null; quote_verified: boolean };
@@ -48,6 +48,7 @@ function show(v: unknown): string {
   if (typeof v === "boolean") return v ? "Yes" : "No";
   if (v === "residence") return "Where patient lives";
   if (v === "care") return "Where care happens";
+  if (v === "either") return "Lives in or gets care in";
   if (v === "procedure") return "Toward procedure";
   if (v === "practical") return "Travel/practical";
   return String(v);
@@ -95,7 +96,7 @@ export default function Admin() {
               <tr key={f.id}>
                 <td>{f.name}{f.reference_only && <div><span className="badge real">Real fund · reference only</span></div>}</td>
                 <td>{f.kind === "clinic" ? "Clinic fund" : "Independent"}</td>
-                <td>{f.states.includes("*") ? "Any" : [...f.states].sort().join(", ")}{f.state_basis === "care" && <div className="muted small">state of care</div>}</td>
+                <td>{f.states.includes("*") ? "Any" : [...f.states].sort().join(", ")}{f.state_basis === "care" && <div className="muted small">state of care</div>}{f.state_basis === "either" && <div className="muted small">lives in or gets care in</div>}</td>
                 <td>{f.income_max_fpl_pct != null ? `≤ ${f.income_max_fpl_pct}% FPL` : "—"}</td>
                 <td>{f.gest_min_weeks != null || f.gest_max_weeks != null ? `${f.gest_min_weeks ?? 0}–${f.gest_max_weeks ?? "any"}` : "—"}</td>
                 <td>{[f.requires_travel ? "must travel" : "", f.max_age != null ? `age ≤ ${f.max_age}` : "", f.no_insurance_only ? "no insurance coverage" : ""].filter(Boolean).join(", ") || "—"}</td>
@@ -213,7 +214,7 @@ function Review({ p, onDone }: { p: Proposal; onDone: () => void }) {
                   {f.kind === "bool" && <input type="checkbox" checked={!!vals[f.key]} onChange={(e) => set(f.key, e.target.checked)} aria-label={f.label} />}
                   {f.kind === "basis" && (
                     <select className="input" value={vals.state_basis} onChange={(e) => set("state_basis", e.target.value)} aria-label={f.label}>
-                      <option value="residence">Where patient lives</option><option value="care">Where care happens</option>
+                      <option value="residence">Where patient lives</option><option value="care">Where care happens</option><option value="either">Lives in or gets care in</option>
                     </select>
                   )}
                   {f.kind === "stype" && (

@@ -67,6 +67,7 @@ export default function Fund() {
           {c.requires_travel && " · must travel"}
           {c.max_age != null && ` · age ≤ ${c.max_age}`}
           {c.state_basis === "care" && " · based on state of care"}
+          {c.state_basis === "either" && " · lives in or gets care in"}
           {c.no_insurance_only && " · no insurance coverage"}
           {c.support_type === "practical" ? ` · travel/practical help up to ${money(c.pledge_cap)}` : <>{" · pledge: "}{c.pledge_kind === "fixed" ? money(c.pledge_value) : `${c.pledge_value}% up to ${money(c.pledge_cap)}`}</>}
           {rulesView && <> · v{rulesView.version}, confirmed {rulesView.days_since_confirmed === 0 ? "today" : `${rulesView.days_since_confirmed} days ago`} · <button className="link small" onClick={() => setTab("rules")}>edit</button></>}

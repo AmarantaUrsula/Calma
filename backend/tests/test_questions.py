@@ -143,3 +143,14 @@ def test_fund_can_ask_extra_questions_and_switch_basis(client):
     assert client.put("/api/fund/rules", headers=jordan, json={**rules, "extra_questions": ["contact"]}).status_code == 422
     q = client.get("/api/clinic/questions", headers=login(client, 2)).json()
     assert {"unhoused", "insurance"} <= set(q["asked"])
+
+
+def test_lives_in_or_gets_care_in():
+    either = rule(1, states=("NC", "SC"), state_basis="either")
+    lives = Screening(**{**S.__dict__, "state": "NC", "care_state": "GA"})
+    care = Screening(**{**S.__dict__, "state": "TN", "care_state": "SC"})
+    neither = Screening(**{**S.__dict__, "state": "TN", "care_state": "GA"})
+    assert any("Lives in NC" in x for x in match(lives, 1000, [either]).matches[0].reasons)
+    assert any("Getting care in SC" in x for x in match(care, 1000, [either]).matches[0].reasons)
+    r = match(neither, 1000, [either])
+    assert not r.matches and "live in or get care in NC, SC" in r.skipped[0].reasons[0]

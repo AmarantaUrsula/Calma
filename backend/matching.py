@@ -68,7 +68,7 @@ class FundRule:
     pledge_kind: str  # 'fixed' | 'percent' (procedure funds)
     pledge_value: int  # procedure: dollars or percent; practical: flat dollars added to the rates (may be 0)
     pledge_cap: int | None
-    state_basis: str = "residence"  # 'residence' | 'care'
+    state_basis: str = "residence"  # 'residence' | 'care' | 'either' (lives in OR gets care in)
     support_type: str = "procedure"  # 'procedure' | 'practical'
     rate_per_mile_cents: int | None = None
     rate_per_night: int | None = None
@@ -116,18 +116,28 @@ def check_rule(s: Screening, r: FundRule, pct: int) -> tuple[bool, list[str]]:
     ok: list[str] = []
     fail: list[str] = []
 
-    if r.state_basis == "care":
-        where, verb = s.care_state, "Getting care in"
-        served = "care in"
-    else:
-        where, verb = s.state, "Lives in"
-        served = "residents of"
+    covered = ", ".join(r.states)
     if "*" in r.states:
-        ok.append("Serves patients from any state" if r.state_basis == "residence" else "Covers care in any state")
-    elif where and where in r.states:
-        ok.append(f"{verb} {where} (fund covers {served} {', '.join(r.states)})")
+        ok.append({"residence": "Serves patients from any state", "care": "Covers care in any state",
+                   "either": "Serves patients from any state"}.get(r.state_basis, "Serves any state"))
+    elif r.state_basis == "either":
+        # e.g. "residents of NC/SC, or anyone with an appointment in NC/SC"
+        if s.state and s.state in r.states:
+            ok.append(f"Lives in {s.state} (fund covers people who live in or get care in {covered})")
+        elif s.care_state and s.care_state in r.states:
+            ok.append(f"Getting care in {s.care_state} (fund covers people who live in or get care in {covered})")
+        else:
+            fail.append(f"Lives in {s.state or 'unknown state'} and getting care in {s.care_state or 'unknown state'}; "
+                        f"fund covers people who live in or get care in {covered} only")
     else:
-        fail.append(f"{verb} {where or 'unknown state'}; fund covers only {served} {', '.join(r.states)}")
+        if r.state_basis == "care":
+            where, verb, served = s.care_state, "Getting care in", "care in"
+        else:
+            where, verb, served = s.state, "Lives in", "residents of"
+        if where and where in r.states:
+            ok.append(f"{verb} {where} (fund covers {served} {covered})")
+        else:
+            fail.append(f"{verb} {where or 'unknown state'}; fund covers only {served} {covered}")
 
     if r.income_max_fpl_pct is not None:
         if pct <= r.income_max_fpl_pct:
