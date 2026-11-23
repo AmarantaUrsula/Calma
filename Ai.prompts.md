@@ -609,3 +609,30 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 > It works now
 
 **Outcome:** The Report Builder works on the live Render site. Calma is fully deployed: login, portals, reports and the AI features. Remaining for the user: fill the Render link into the demo guide and send it to colleagues, with the password shared privately.
+
+---
+
+## Prompt 45 — 2026-11-23
+
+> Make me a slide deck called slides.html using reveal.js, loaded from a CDN. 10 slides max, following the outline in my report. Put my screenshots and diagram right inside the file so it still works when emailed to someone. Use a clean design with big text and the same colors as my app.
+>
+> 1. Title: project name, your name, one-line pitch
+> 2. The problem and who has it
+> 3. What is new about your solution
+> 4. How the agents work (diagram)
+> 5. Demo screenshots
+> 6. Cost to run
+> 7. Safety
+> 8. Impact: the numbers
+> 9. What's next
+
+*(Follow-up typed while I was working:)*
+
+> actually stop, I have no made the report yet
+
+**Outcome:** Stopped before building anything; no `slides.html` was created.
+- **Gathered so far** (for later):
+  - **Render:** Starter is about $7/month, a persistent disk $0.25/GB/month (mostly third-party sources; confirm on render.com/pricing).
+  - **OpenAI `gpt-5.6-luna`:** $0.20 per million input tokens and $1.20 per million output tokens (OpenAI model page; prices cut about 80% on July 30, 2026).
+  - **Visuals:** the user's diagram is `design-flowchart.webp`. No Calma screenshots were found, so they'd need to be taken.
+- **Security flag raised:** "Try Calma.docx", committed to the public GitHub repo, contains the live Render link and the live admin password. Recommended changing `CALMA_DEMO_PASSWORD` on Render and removing the file from GitHub. No action taken without the user's OK.
