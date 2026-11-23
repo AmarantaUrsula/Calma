@@ -431,3 +431,9 @@ Offered to fix 1 (demo password set in Render, not GitHub) and 2 (a bilingual de
 3. **`DEMO_GUIDE.md`** for colleagues: what Calma is, the demo-data warning, a blank for the link, the password shared separately, the account list, three 5-minute walkthroughs (patient, funds/clinics deciding, keeping rules up to date incl. a real-fund AI check), feedback questions, what's not built, and how decisions are made (rules, not AI).
 
 README and DESIGN updated. 72 tests pass. Checked both notices in the browser (patient at phone size in English/Spanish, login page).
+
+*(Follow-up typed while I was working:)*
+
+> If I buy the lowest plan in Render will it not wipe the database every time
+
+**Outcome:** Explained: a paid plan alone isn't enough. Render's normal disk is temporary on every plan, so a redeploy or restart still erases the SQLite file. The paid plan stops the free-plan sleeping (so fewer restarts), but keeping data also needs a **persistent disk** (a paid add-on for paid services) with `CALMA_DB` pointing to it, or a move to Postgres. Offered to add the disk setup to `render.yaml`.
