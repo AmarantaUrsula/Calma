@@ -521,3 +521,11 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 - With a demo password set, the same startup worked: demo data plus 90 past cases loaded, health check 200.
 - **Build:** a clean `npm ci` and production build (as in the Dockerfile) succeed, and the lockfile includes the Linux build packages.
 - Asked the user to check Render's Events/Logs and paste the error if it's something else.
+
+---
+
+## Prompt 36 — 2026-11-23
+
+> *(Pasted the Render deploy log.)* The Docker build succeeded (all steps cached). The deploy then failed at startup: `backend.seed.MissingDemoPassword: Set CALMA_DEMO_PASSWORD in the host's environment settings (not the public default) before loading demo data.` … `Application startup failed. Exiting.` … `Exited with status 3`.
+
+**Outcome:** Confirmed the cause: `CALMA_DEMO_PASSWORD` isn't set in Render, so the safety check stops startup. The build itself is fine. Gave the fix: Render → calma service → Environment → add `CALMA_DEMO_PASSWORD` (10+ characters, not the README default) → Save and redeploy. Made the error message spell out those exact steps. 78 tests pass.

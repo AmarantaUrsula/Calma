@@ -108,10 +108,13 @@ def check_demo_password() -> None:
         pw = os.environ.get("CALMA_DEMO_PASSWORD", "")
         if not pw or pw == LOCAL_DEMO_PASSWORD:
             raise MissingDemoPassword(
-                "Set CALMA_DEMO_PASSWORD in the host's environment settings (not the public default) "
-                "before loading demo data.")
+                "CALMA_DEMO_PASSWORD is not set. On Render: open this service > Environment > Add "
+                "Environment Variable, key CALMA_DEMO_PASSWORD, a password of at least 10 characters that "
+                "isn't the public README default. Save, then redeploy. (This keeps the demo accounts private "
+                "because the GitHub repo is public.)")
         if len(pw) < 10:
-            raise MissingDemoPassword("CALMA_DEMO_PASSWORD must be at least 10 characters.")
+            raise MissingDemoPassword("CALMA_DEMO_PASSWORD must be at least 10 characters. Change it under "
+                                      "this service > Environment, then redeploy.")
 DEMO_EMAILS = {
     1: "rosa@mesa.example.org", 2: "dana@prairie.example.org", 3: "sam@desertbloom.example.org",
     4: "jordan@heartland.example.org", 5: "alex@openroad.example.org", 6: "kai@latercare.example.org",
