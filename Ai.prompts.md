@@ -494,3 +494,18 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 > ok are we ready to commit?
 
 **Outcome:** Yes. All feature work was already committed and pushed. The only uncommitted change was this prompt log, so I committed and pushed it, leaving out the missing local "Try Calma.docx" so it stays on GitHub. Tests: 78 passing.
+
+---
+
+## Prompt 34 — 2026-11-23
+
+> can you udpdate the demo guide to includes this latest reporting function
+
+**Outcome:** Updated `DEMO_GUIDE.md` for reporting:
+- **New walkthrough "4. Reports: how much went where (5 min)":**
+  - the Report Builder, with three example requests and how it works (AI picks settings only, never sees patient data, numbers from Calma)
+  - the manual controls (period, disbursed vs pledged, up to three groupings, Table/Bar/Pie, Dollars/Patients, hover)
+  - Download Excel (Report and Data sheets, de-identified)
+  - a fund's narrower view (as Sam)
+  - the small-group "*" flag and audit logging
+- **Other edits:** the intro now mentions reports; the total time is now about 20 minutes; the Admin row lists reports; a new feedback question about reports; and "How decisions are made" now names both places AI is used (fund-website suggestions and report settings), neither of which decides who gets money.
