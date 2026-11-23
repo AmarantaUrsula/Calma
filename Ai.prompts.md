@@ -509,3 +509,15 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
   - a fund's narrower view (as Sam)
   - the small-group "*" flag and audit logging
 - **Other edits:** the intro now mentions reports; the total time is now about 20 minutes; the Admin row lists reports; a new feedback question about reports; and "How decisions are made" now names both places AI is used (fund-website suggestions and report settings), neither of which decides who gets money.
+
+---
+
+## Prompt 35 — 2026-11-23
+
+> most recent render deploy failed. any advice on troubleshotting
+
+**Outcome:** I can't see Render's logs, so I reproduced likely causes locally (no code changes):
+- **Most likely cause: a missing demo password.** Started the server the way Render does, with no `CALMA_DEMO_PASSWORD`. Startup fails on purpose: "MissingDemoPassword: Set CALMA_DEMO_PASSWORD in the host's environment settings… Application startup failed". The same happens if the password is under 10 characters or is the public `calma-demo-2026`. Render only asks for new secret settings when a Blueprint is first created, so a service created before this setting existed won't have it: it must be added under the service's **Environment** tab.
+- With a demo password set, the same startup worked: demo data plus 90 past cases loaded, health check 200.
+- **Build:** a clean `npm ci` and production build (as in the Dockerfile) succeed, and the lockfile includes the Linux build packages.
+- Asked the user to check Render's Events/Logs and paste the error if it's something else.
