@@ -37,6 +37,11 @@ Based on the product description and flowchart (`design-flowchart.webp`).
 
     These are candidates for future rule options.
 
+16. **Demo readiness (2026-11-23):**
+    - **Separate demo password:** the deployed site uses its own demo password, set in Render (`CALMA_DEMO_PASSWORD`, required there), because the repo and its README are public.
+    - **Demo notice:** patient screens (English/Spanish) and the login pages say not to enter real information.
+    - **Colleague guide:** `DEMO_GUIDE.md` walks colleagues through three 5-minute scenarios and asks for feedback.
+
 ## Guiding principle: the AI never decides who gets money
 
 Eligibility and pledge amounts must be **deterministic, auditable rules**, not LLM output. These decisions move real money for a vulnerable population. Every result must be explainable ("matched because: lives in TX, income ≤ 200% FPL"), and the same input must always give the same answer. So the **matching engine is plain Python code, not an agent**. Agents go where language is the hard part: turning messy fund policies into rules, explaining things in plain words, and summarizing cases for staff.

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, errText, navigate, setSession } from "../api";
 import type { StaffUser } from "./Staff";
+import { SHOW_DEMO_NOTICE } from "../demo";
 
 // Staff only. Patients never log in: they use the private link their clinic sends.
 
@@ -8,6 +9,11 @@ function AuthShell({ title, children }: { title: string; children: React.ReactNo
   return (
     <div className="staff">
       <header className="staff-top"><span className="brand">Calma</span><div className="staff-title">{title}</div></header>
+      {SHOW_DEMO_NOTICE && (
+        <div className="demo-banner" role="note">
+          Demo version for colleagues to try. All clinics, funds, patients and accounts are made up. Please don't enter real personal or patient information.
+        </div>
+      )}
       <main className="staff-main auth-main">{children}</main>
       <footer className="demo-note">For clinic, abortion fund and Calma staff. Patients: please use the link your clinic sent you.</footer>
     </div>

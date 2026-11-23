@@ -239,3 +239,7 @@ h2.sub { margin-top: 14px; }
 .two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 480px) { .two-fields { grid-template-columns: 1fr; } }
 .badge.real { color: var(--heading); border-color: rgba(123, 82, 54, .45); background: rgba(123, 82, 54, .07); margin-top: 3px; }
+
+/* ---------- demo notice ---------- */
+.demo-banner { background: rgba(123, 82, 54, .09); border-bottom: 1px solid rgba(123, 82, 54, .25); color: var(--heading);
+  text-align: center; font-size: 14px; padding: 9px 16px; line-height: 1.4; }

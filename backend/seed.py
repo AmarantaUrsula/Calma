@@ -9,6 +9,7 @@ Every clinic, fund and person here is fictional. Phone numbers use the
 from __future__ import annotations
 
 import json
+import os
 
 from .clock import now_iso
 from .db import connect, db_path, init_schema
@@ -89,9 +90,28 @@ CRITERIA = {
     8: dict(states=["NM"], state_basis="care", income_max_fpl_pct=250, pledge_kind="fixed", pledge_value=150),
 }
 
-# Demo staff accounts. All share one made-up demo password, stored only as a hash.
-# (Test values for this demo app; listed in README.md so you can log in.)
-DEMO_PASSWORD = "calma-demo-2026"
+# Demo staff accounts. All share one demo password, stored only as a hash.
+# Locally it defaults to the made-up value below (listed in README.md). On a public deployment
+# (Render) set CALMA_DEMO_PASSWORD in the host's settings instead, because this repo is public
+# and anyone could read the default. With CALMA_REQUIRE_DEMO_PASSWORD=1, seeding refuses to run
+# without it rather than fall back to the public default.
+LOCAL_DEMO_PASSWORD = "calma-demo-2026"
+DEMO_PASSWORD = os.environ.get("CALMA_DEMO_PASSWORD") or LOCAL_DEMO_PASSWORD
+
+
+class MissingDemoPassword(RuntimeError):
+    pass
+
+
+def check_demo_password() -> None:
+    if os.environ.get("CALMA_REQUIRE_DEMO_PASSWORD") == "1":
+        pw = os.environ.get("CALMA_DEMO_PASSWORD", "")
+        if not pw or pw == LOCAL_DEMO_PASSWORD:
+            raise MissingDemoPassword(
+                "Set CALMA_DEMO_PASSWORD in the host's environment settings (not the public default) "
+                "before loading demo data.")
+        if len(pw) < 10:
+            raise MissingDemoPassword("CALMA_DEMO_PASSWORD must be at least 10 characters.")
 DEMO_EMAILS = {
     1: "rosa@mesa.example.org", 2: "dana@prairie.example.org", 3: "sam@desertbloom.example.org",
     4: "jordan@heartland.example.org", 5: "alex@openroad.example.org", 6: "kai@latercare.example.org",
@@ -121,6 +141,7 @@ CLINIC_EXTRAS = {2: ["contact"]}
 
 
 def seed(conn) -> None:
+    check_demo_password()
     init_schema(conn)
     conn.executemany("INSERT INTO clinics (id, name, city, state, phone) VALUES (?, ?, ?, ?, ?)", CLINICS)
     conn.executemany(

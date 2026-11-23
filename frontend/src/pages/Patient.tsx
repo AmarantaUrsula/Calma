@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, ApiError, money } from "../api";
 import { formatDate, Lang, STRINGS, Strings } from "../i18n";
 import { STATE_NAMES } from "../states";
+import { DEMO_NOTICE_BOTH, SHOW_DEMO_NOTICE } from "../demo";
 
 type Pledge = { fund_name: string; fund_kind: string; status: string; amount: number; category: "procedure" | "practical" };
 type View = {
@@ -136,6 +137,9 @@ function PatientShell({ t, lang, setLang, footer, children }: {
           </div>
         )}
       </header>
+      {SHOW_DEMO_NOTICE && (
+        <div className="demo-banner" role="note">{setLang ? t.demoNotice : DEMO_NOTICE_BOTH}</div>
+      )}
       <main className="patient-main">{children}</main>
       {footer && (
         <footer className="clinic-bar">

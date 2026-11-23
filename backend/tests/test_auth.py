@@ -151,3 +151,26 @@ def test_disabling_signs_out_right_away(env):
     assert login(c, *demo_credentials(1).values()).status_code == 200
     assert c.post("/api/admin/users/8/disable", headers=admin).status_code == 422  # not yourself
     assert c.post("/api/admin/users/1/approve", headers=rosa).status_code == 401
+
+
+def test_deployment_requires_its_own_demo_password(tmp_path, monkeypatch):
+    import importlib
+    from backend import seed as seed_mod
+    monkeypatch.setenv("CALMA_REQUIRE_DEMO_PASSWORD", "1")
+    monkeypatch.delenv("CALMA_DEMO_PASSWORD", raising=False)
+    with pytest.raises(seed_mod.MissingDemoPassword):
+        seed_mod.check_demo_password()
+    monkeypatch.setenv("CALMA_DEMO_PASSWORD", seed_mod.LOCAL_DEMO_PASSWORD)  # the public default isn't allowed
+    with pytest.raises(seed_mod.MissingDemoPassword):
+        seed_mod.check_demo_password()
+    monkeypatch.setenv("CALMA_DEMO_PASSWORD", "private river stones")
+    mod = importlib.reload(seed_mod)
+    try:
+        conn = connect(tmp_path / "d.db")
+        mod.seed(conn)
+        h = conn.execute("SELECT password_hash FROM users WHERE id = 8").fetchone()[0]
+        assert auth.verify_password("private river stones", h) and not auth.verify_password(mod.LOCAL_DEMO_PASSWORD, h)
+    finally:
+        monkeypatch.delenv("CALMA_DEMO_PASSWORD")
+        monkeypatch.delenv("CALMA_REQUIRE_DEMO_PASSWORD")
+        importlib.reload(seed_mod)

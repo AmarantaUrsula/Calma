@@ -399,3 +399,35 @@ Details:
 - **Fund and clinic rules editors:** new "**Either one**: lives there or gets care there" choice, with a clearer states heading. The admin review dropdown and the rules tables show it too.
 - **AI extractor:** now knows the "either" option. A live re-read of Carolina Abortion Fund's page picked "either", quoting the page: callers who live in NC or SC "and/or have an appointment" there. Refreshed Carolina's waiting suggestion with it (still waiting for the user's review, not approved).
 - **Tested:** 71 automated tests pass (2 new: lives-in match, gets-care-in match, neither, plus the extractor accepting "either"). Browser: Carolina's review shows "Lives in or gets care in" with the quote.
+
+---
+
+## Prompt 28 — 2026-11-23
+
+> Ok this is all looking great. Anything else before I send to colleagues to demo?
+
+**Outcome:** Reviewed demo readiness (no code changes yet). Found:
+1. **Public demo password:** the repo is public and the README lists the demo password, so on the live site anyone could log in as the admin. From there they could approve accounts and click "Check now", which spends OpenAI credits.
+2. **No demo notice for patients:** the patient screens have no "this is a demo — don't enter real information" notice, and colleagues might type real details.
+3. **Not deployed or built yet:** the app isn't on Render yet, and the Docker image has never been built (no Docker on this Mac).
+4. **OpenAI key:** no spending limit noted, and the key was pasted into chat earlier.
+5. **Demo behavior to expect:** demo data resets on Render's free plan, the first visit is slow, and real-fund rules stay empty until someone clicks "Check now".
+6. **Spanish:** not yet reviewed by a native speaker.
+
+Offered to fix 1 (demo password set in Render, not GitHub) and 2 (a bilingual demo notice), and to write a one-page guide for colleagues.
+
+---
+
+## Prompt 29 — 2026-11-23
+
+> Yes, do all three
+
+**Outcome:** Did all three.
+1. **Demo password off GitHub for the live site:** the demo accounts' password now comes from `CALMA_DEMO_PASSWORD` when set. `render.yaml` asks for it when you create the service and sets `CALMA_REQUIRE_DEMO_PASSWORD=1`, so on Render the app refuses to load demo data (with a clear log message) if the password is missing, shorter than 10 characters, or the public local default. Locally nothing changes (`calma-demo-2026`). 1 new test.
+2. **Demo notice:**
+   - **Patient screens:** a soft brown banner. It shows in both languages on the language screen, then in the chosen language: "This is a demo. Please don't enter real personal information…" / "Esto es una demostración…".
+   - **Login and create-account pages:** a notice for colleagues.
+   - **Turning it off:** a real deployment can switch it off with `VITE_DEMO_NOTICE=0`.
+3. **`DEMO_GUIDE.md`** for colleagues: what Calma is, the demo-data warning, a blank for the link, the password shared separately, the account list, three 5-minute walkthroughs (patient, funds/clinics deciding, keeping rules up to date incl. a real-fund AI check), feedback questions, what's not built, and how decisions are made (rules, not AI).
+
+README and DESIGN updated. 72 tests pass. Checked both notices in the browser (patient at phone size in English/Spanish, login page).

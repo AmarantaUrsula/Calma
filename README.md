@@ -31,7 +31,7 @@ Tests: `.venv/bin/python -m pytest -q backend/tests`
 The repo includes a `Dockerfile` (builds the React app, then serves it from the FastAPI server as one service) and a `render.yaml` Blueprint.
 
 1. In Render: **New → Blueprint**, connect GitHub, and pick the **Calma** repo. Render reads `render.yaml`.
-2. When asked, paste your **OPENAI_API_KEY** (it's stored in Render, never in the repo). Other settings come from `render.yaml`:
+2. When asked, paste your **OPENAI_API_KEY** and choose a **CALMA_DEMO_PASSWORD** (at least 10 characters; share it with colleagues directly). Both are stored in Render, never in the repo. If the demo password is missing, the app refuses to load demo data and the deploy log says why. Other settings come from `render.yaml`:
    - `OPENAI_MODEL=gpt-5.6-luna`
    - `CALMA_SEED_IF_EMPTY=1`: load the made-up demo data on start
    - `CALMA_SCHEDULER=0`: automatic website checks off, to avoid unplanned AI calls. **Admin → Check now** still works.
@@ -44,7 +44,9 @@ What to know:
 
 ## Demo accounts
 
-Every demo account uses the made-up password **`calma-demo-2026`** (it's set in `backend/seed.py`). The emails use the reserved `example.org` domain.
+**On your own computer**, every demo account uses the made-up password **`calma-demo-2026`** (set in `backend/seed.py`). **On the deployed site (Render), it's different:** you choose it in Render's settings (`CALMA_DEMO_PASSWORD`), because this repo is public and anyone can read the local default. The emails use the reserved `example.org` domain.
+
+Sending the demo to colleagues? Share [DEMO_GUIDE.md](DEMO_GUIDE.md) (fill in the link at the top) and give them the Render password directly.
 
 | Who | Email | Portal |
 |---|---|---|

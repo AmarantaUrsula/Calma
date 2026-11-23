@@ -12,6 +12,10 @@ services:
         value: gpt-5.6-luna
       - key: CALMA_SEED_IF_EMPTY   # free instances start with an empty disk: load the made-up demo data
         value: "1"
+      - key: CALMA_DEMO_PASSWORD   # password for the demo staff accounts on this site. Choose your own and
+        sync: false                # share it with colleagues directly. The repo is public, so the README's
+      - key: CALMA_REQUIRE_DEMO_PASSWORD  # local default must NOT be used here: the app won't load demo data
+        value: "1"                       # without CALMA_DEMO_PASSWORD.
       - key: CALMA_PASSWORD_PEPPER  # secret mixed into password hashes, kept out of the database.
         generateValue: true         # Render creates a random value once. Don't change it later.
       - key: CALMA_SCHEDULER       # automatic fund website checks make AI calls; off by default here.
