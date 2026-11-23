@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from backend import clock
 from backend.db import connect
-from backend.seed import seed
+from backend.seed import demo_credentials, seed
 
 KS_PATIENT = {"state": "KS", "household_size": 1, "monthly_income": 1000, "gestational_weeks": 8, "needs_travel": False}
 
@@ -26,7 +26,7 @@ def client(tmp_path, monkeypatch):
 
 
 def login(c, uid):
-    return {"Authorization": "Bearer " + c.post("/api/auth/login", json={"user_id": uid}).json()["token"]}
+    return {"Authorization": "Bearer " + c.post("/api/auth/login", json=demo_credentials(uid)).json()["token"]}
 
 
 def screen(c, clinic_h, answers):

@@ -68,6 +68,8 @@ export default function Admin() {
     <StaffShell title="Admin" subtitle="Fund rules and audit log">
       {err && <p className="error">{err}</p>}
 
+      <Accounts />
+
       {proposals.map((p) => <Review key={p.id} p={p} onDone={() => { setUpdating(null); load(); }} />)}
 
       {updating && !proposals.some((p) => p.fund_id === updating.id) && (
@@ -327,6 +329,61 @@ function WebsiteChecks({ onChange }: { onChange: () => void }) {
             </tbody>
           </table>
         </details>
+      )}
+    </div>
+  );
+}
+
+type Account = {
+  id: number; name: string; email: string | null; role: string; status: string; created_at: string | null;
+  approved_at: string | null; last_login_at: string | null; clinic_name: string | null; fund_name: string | null;
+};
+const ROLE: Record<string, string> = { clinic: "Clinic staff", fund: "Fund staff", admin: "Calma admin" };
+const ACCT_BADGE: Record<string, [string, string]> = {
+  pending: ["Waiting for approval", "pending"], active: ["Active", "approved"], rejected: ["Rejected", "declined"], disabled: ["Disabled", "declined"],
+};
+const shortDate = (iso: string | null) => (iso ? iso.replace("T", " ").slice(0, 16) : "—");
+
+function Accounts() {
+  const [rows, setRows] = useState<Account[]>([]);
+  const [err, setErr] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  useEffect(() => { api<Account[]>("/api/admin/users").then(setRows).catch((e) => setErr(errText(e))); }, []);
+  const act = async (id: number, action: string) => {
+    setErr("");
+    try { setRows(await api<Account[]>(`/api/admin/users/${id}/${action}`, { method: "POST" })); } catch (e) { setErr(errText(e)); }
+  };
+  const pending = rows.filter((r) => r.status === "pending");
+  const shown = showAll ? rows : pending;
+  return (
+    <div className={`card ${pending.length ? "review-card" : ""}`}>
+      <div className="pledge-head">
+        <h2>Staff accounts</h2>
+        <span className="muted small">
+          {pending.length ? `${pending.length} waiting for approval. Check that each person really works where they say before approving.` : "No accounts waiting for approval."}
+        </span>
+        <button className="btn ghost small-btn right" onClick={() => setShowAll((x) => !x)}>{showAll ? "Show waiting only" : `Show all (${rows.length})`}</button>
+      </div>
+      {err && <p className="error small" role="alert">{err}</p>}
+      {shown.length > 0 && (
+        <table className="grid">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Organization</th><th>Status</th><th>Created</th><th>Last log in</th><th /></tr></thead>
+          <tbody>
+            {shown.map((r) => (
+              <tr key={r.id}>
+                <td>{r.name}</td><td className="small">{r.email}</td><td>{ROLE[r.role]}</td>
+                <td>{r.clinic_name ?? r.fund_name ?? "Calma"}</td>
+                <td><span className={`badge ${ACCT_BADGE[r.status][1]}`}>{ACCT_BADGE[r.status][0]}</span></td>
+                <td className="small mono">{shortDate(r.created_at)}</td><td className="small mono">{shortDate(r.last_login_at)}</td>
+                <td className="num">
+                  {r.status === "pending" && <span className="decide"><button className="btn small-btn" onClick={() => act(r.id, "approve")}>Approve</button><button className="btn ghost small-btn" onClick={() => act(r.id, "reject")}>Reject</button></span>}
+                  {r.status === "active" && <button className="btn ghost small-btn" onClick={() => act(r.id, "disable")}>Disable</button>}
+                  {r.status === "disabled" && <button className="btn ghost small-btn" onClick={() => act(r.id, "enable")}>Enable</button>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );

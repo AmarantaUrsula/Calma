@@ -12,6 +12,7 @@ import json
 
 from .clock import now_iso
 from .db import connect, db_path, init_schema
+from .auth import hash_password
 from .proposals import insert_rule
 
 CLINICS = [
@@ -64,6 +65,20 @@ CRITERIA = {
     8: dict(states=["NM"], state_basis="care", income_max_fpl_pct=250, pledge_kind="fixed", pledge_value=150),
 }
 
+# Demo staff accounts. All share one made-up demo password, stored only as a hash.
+# (Test values for this demo app; listed in README.md so you can log in.)
+DEMO_PASSWORD = "calma-demo-2026"
+DEMO_EMAILS = {
+    1: "rosa@mesa.example.org", 2: "dana@prairie.example.org", 3: "sam@desertbloom.example.org",
+    4: "jordan@heartland.example.org", 5: "alex@openroad.example.org", 6: "kai@latercare.example.org",
+    7: "mia@youthaccess.example.org", 8: "admin@calma.example.org", 9: "lu@enchantedcircle.example.org",
+}
+
+
+def demo_credentials(user_id: int) -> dict:
+    return {"email": DEMO_EMAILS[user_id], "password": DEMO_PASSWORD}
+
+
 # id, name, role, clinic_id, fund_id
 USERS = [
     (1, "Rosa (Mesa front desk)", "clinic", 1, None),
@@ -98,7 +113,15 @@ def seed(conn) -> None:
         insert_rule(conn, fund_id, 1, "approved", c, last_verified_at=now_iso(), verified_by="seed data")
     for clinic_id, qs in CLINIC_EXTRAS.items():
         conn.execute("UPDATE clinics SET extra_questions = ? WHERE id = ?", (json.dumps(qs), clinic_id))
-    conn.executemany("INSERT INTO users VALUES (?, ?, ?, ?, ?)", USERS)
+    for uid, name, role, clinic_id, fund_id in USERS:
+        first = name.split(" (")[0]
+        last = name.split("(")[1].split(" ")[0].rstrip(")") if "(" in name else ""
+        conn.execute(
+            """INSERT INTO users (id, name, role, clinic_id, fund_id, first_name, last_name, email, password_hash,
+               status, created_at, approved_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)""",
+            (uid, name, role, clinic_id, fund_id, first, last, DEMO_EMAILS[uid], hash_password(DEMO_PASSWORD),
+             now_iso(), now_iso()),
+        )
     conn.commit()
 
 

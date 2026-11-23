@@ -24,6 +24,12 @@ Based on the product description and flowchart (`design-flowchart.webp`).
 
 13. **Visual style (2026-11-23):** replaced the default black-and-pink theme (from the course's Semester Project Rules) at the product owner's request. Hot pink on near-black felt like "a teacher's correcting pen" to a nervous patient. New calm palette on a warm linen background: muted slate blue for buttons and links, sage green for the Calma name and "approved", warm brown for section headings, ochre for "waiting", terracotta instead of alarm red for problems. Every text color passes WCAG AA contrast (4.5:1 or better). Colors live as variables at the top of `frontend/src/styles.css`.
 
+14. **Staff accounts (2026-11-23):** a real create-account and log-in flow for clinic staff, fund staff and admins (patients keep using their private link).
+    - **Approval:** new accounts wait for a Calma admin's approval, including admin accounts, so nobody can grant themselves access.
+    - **Password storage:** salted scrypt hashes with the settings stored in each hash, plus an optional pepper kept outside the database. Comparisons are constant-time. The password and hash never appear in responses or logs.
+    - **Login protection:** one generic error message, and a 15-minute lockout after 5 misses. Session tokens are kept only as hashes.
+    - **Not built yet:** password reset, email verification and two-factor login.
+
 ## Guiding principle: the AI never decides who gets money
 
 Eligibility and pledge amounts must be **deterministic, auditable rules**, not LLM output. These decisions move real money for a vulnerable population. Every result must be explainable ("matched because: lives in TX, income ≤ 200% FPL"), and the same input must always give the same answer. So the **matching engine is plain Python code, not an agent**. Agents go where language is the hard part: turning messy fund policies into rules, explaining things in plain words, and summarizing cases for staff.

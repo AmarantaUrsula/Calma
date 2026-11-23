@@ -4,9 +4,10 @@ import Admin from "./pages/Admin";
 import Clinic from "./pages/Clinic";
 import Fund from "./pages/Fund";
 import Patient from "./pages/Patient";
-import { Login, StaffUser } from "./pages/Staff";
+import { Login, Signup } from "./pages/Auth";
+import type { StaffUser } from "./pages/Staff";
 
-// Tiny router: /p/<token> (patient), /login, /clinic, /fund, /admin.
+// Tiny router: /p/<token> (patient, no login), /login, /signup, /clinic, /fund, /admin.
 export default function App() {
   const [path, setPath] = useState(window.location.pathname);
   useEffect(() => {
@@ -25,6 +26,6 @@ export default function App() {
     if (user.role !== role) { navigate(`/${user.role}`); return null; }
     return role === "clinic" ? <Clinic /> : role === "fund" ? <Fund /> : <Admin />;
   }
-  if (path === "/login" || path === "/") return <Login />;
+  if (path === "/signup") return <Signup />;
   return <Login />;
 }

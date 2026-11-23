@@ -206,6 +206,18 @@ ADDED_COLUMNS: dict[str, list[tuple[str, str]]] = {
         ("questions_asked", "TEXT"),                # JSON list of question ids shown to this patient
     ],
     "pledges": [("category", "TEXT NOT NULL DEFAULT 'procedure'")],
+    # Staff accounts. password_hash is a salted scrypt hash (see backend/auth.py), never the password.
+    "users": [
+        ("first_name", "TEXT"),
+        ("last_name", "TEXT"),
+        ("email", "TEXT"),                               # stored lowercase; unique
+        ("password_hash", "TEXT"),
+        ("status", "TEXT NOT NULL DEFAULT 'active'"),    # 'pending' | 'active' | 'rejected' | 'disabled'
+        ("created_at", "TEXT"),
+        ("approved_by", "INTEGER"),
+        ("approved_at", "TEXT"),
+        ("last_login_at", "TEXT"),
+    ],
     # A fund asks to partner with a clinic; the clinic accepts. Only accepted partnerships count.
     "clinic_fund_partnerships": [
         ("status", "TEXT NOT NULL DEFAULT 'accepted'"),   # 'pending' | 'accepted' | 'declined'
@@ -223,6 +235,7 @@ def init_schema(conn: sqlite3.Connection) -> None:
         for name, decl in cols:
             if name not in have:
                 conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {decl}")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email) WHERE email IS NOT NULL")
 
 
 def audit(conn: sqlite3.Connection, actor: str, action: str, case_id: int | None = None, detail: dict | None = None) -> None:

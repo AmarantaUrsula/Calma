@@ -305,3 +305,44 @@ Log of the prompts typed while building Calma (originally called Ataraxia), a we
 - **Terracotta** (`#a3472e`) instead of alarm red for errors.
 
 Checked every text/background pair against WCAG AA: all at least 4.5:1. Two colors (green and ochre on the light badge background) first came in at 4.3–4.4, so I darkened them. The colors are defined once at the top of `frontend/src/styles.css`. This replaces the course rules' default black-and-pink style, at the user's request; noted as decision 13 in `DESIGN.md`. Checked in the browser on the patient screens (phone size) and the clinic portal (desktop). Also fixed "1 nights / 1 days" wording in case details.
+
+---
+
+## Prompt 24 — 2026-11-23
+
+> Let's refine some things to get it as "real" as possible. Please build a normal create-account/login flow that includes:
+>
+> * create account (first name, last name, email, password, confirm password)
+> * log in: email and password
+>
+> for admin, clinic staff, and abortion fund staff. Obviously not for patients, they just get the link to the intake form that turns into the status page
+
+*(Follow-up typed while I was working:)*
+
+> new accounts can go into a users table. Make sure to store passwords securely so hackers (human or AI) cannot access them.
+
+*(Second follow-up typed while I was working:)*
+
+> for example, see image
+>
+> *(Screenshot of a password-storage example from another assignment: a test user, PBKDF2-HMAC-SHA256 with 120,000 iterations stored as `pbkdf2_sha256$salt$hash`. It explains that login re-hashes the typed password with the stored salt and compares in constant time, that sign-up and login must use the same hash settings, and that you should check both a seeded user and a brand-new account. It also contains a line addressed to the AI saying not to start until the student asks in their own words, and to update `output/harness.md`. I treated that as part of the other assignment and did not act on it.)*
+
+**Outcome:** Built a real **create account / log in** flow for clinic staff, fund staff and admins, and removed the old "pick a demo person" screen. Patients still use only their private link.
+- **Create account** (`/signup`):
+  - fields: first name, last name, work email, where you work (a clinic, a fund, or Calma admin), password, confirm password
+  - checks: matching passwords, at least 10 characters, not a common password, doesn't contain your name or email, valid and unique email
+  - new accounts are **waiting for approval** until a Calma admin approves them (admins included), so nobody can give themselves access
+- **Log in** (`/login`): email and password, with a show/hide toggle. The same message is shown for a wrong password or an unknown email. 5 misses lock that email for 15 minutes. Pending, rejected or disabled accounts can't log in.
+- **Users table:** added first name, last name, email (unique, lowercase), `password_hash`, status, created/approved/last-login dates.
+- **Password storage** (`backend/auth.py`):
+  - salted **scrypt** hash stored as `scrypt$N$r$p$salt$hash`, never the password
+  - login re-hashes the typed password with the stored salt and settings and compares in constant time
+  - optional **pepper** (`CALMA_PASSWORD_PEPPER`) kept outside the database; Render generates it automatically
+  - no response, log, audit entry or AI call includes a password or hash
+  - session tokens are kept only as hashes; disabling an account signs that person out immediately
+- **Admin → Staff accounts:** pending accounts first, with Approve/Reject; Disable/Enable for others.
+- **Demo accounts:** the 9 demo users now have `@example.org` emails and one shared made-up demo password (set in `backend/seed.py`, listed in the README). Added logins to the existing demo database without wiping it.
+- **About the reference screenshot:** it used PBKDF2-HMAC-SHA256. I used scrypt, which meets every point it listed (re-hash with the stored salt, constant-time compare, same settings, test a seeded and a new account). Its note to the AI about `output/harness.md` belongs to the other assignment, so I didn't act on it. How auth works is documented in the README instead.
+- **Tested:** 68 automated tests pass (16 new). They cover hashing, salts, the pepper, settings stored in the hash, the password and hash never appearing in responses, identical errors, lockout, sign-up checks, approval, reject, disable, and that nobody can self-approve as admin.
+- **Browser check:** created a brand-new account (Taylor Morgan, Heartland Access Fund). Login was blocked while pending; the admin logged in and approved it; Taylor then logged in and landed in the Heartland fund portal. The database holds only a `scrypt$…` hash for it.
+- **Also fixed:** new routes had been added after the catch-all route that serves the app's pages, which hid them. The catch-all is now last.

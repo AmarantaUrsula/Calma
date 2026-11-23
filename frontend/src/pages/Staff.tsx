@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, errText, getUser, money, navigate, setSession } from "../api";
 
-export type StaffUser = { id: number; name: string; role: "clinic" | "fund" | "admin" };
+export type StaffUser = { id: number; name: string; role: "clinic" | "fund" | "admin"; email?: string | null };
 
 export function StaffShell({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   const user = getUser<StaffUser>();
@@ -66,43 +66,6 @@ export function DecisionControls({ p, path, onDone }: { p: Pledge; path: string;
       <button className="btn" disabled={busy || amount < 1} onClick={() => decide("approve")}>Approve</button>
       <button className="btn ghost" disabled={busy} onClick={() => decide("decline")}>Decline</button>
       {err && <p className="error small" role="alert">{err}</p>}
-    </div>
-  );
-}
-
-export function Login() {
-  type DemoUser = { id: number; name: string; role: string; clinic_name: string | null; fund_name: string | null };
-  const [users, setUsers] = useState<DemoUser[]>([]);
-  const [err, setErr] = useState("");
-  useEffect(() => { api<DemoUser[]>("/api/demo/users").then(setUsers).catch((e) => setErr(errText(e))); }, []);
-  const go = async (id: number) => {
-    try {
-      const r = await api<{ token: string; user: StaffUser }>("/api/auth/login", { body: { user_id: id } });
-      setSession(r.token, r.user);
-      navigate(`/${r.user.role}`);
-    } catch (e) { setErr(errText(e)); }
-  };
-  const group = (role: string) => users.filter((u) => u.role === role);
-  return (
-    <div className="staff">
-      <header className="staff-top"><span className="brand">Calma</span><div className="staff-title">Staff sign-in (demo)</div></header>
-      <main className="staff-main narrow">
-        <p className="muted">Demo only: pick a made-up staff member. A real version needs secure sign-in with two-factor login.</p>
-        {err && <p className="error">{err}</p>}
-        {[["clinic", "Clinic staff"], ["fund", "Fund staff"], ["admin", "Admin"]].map(([role, label]) => (
-          <section key={role} className="card">
-            <h2>{label}</h2>
-            <div className="user-grid">
-              {group(role).map((u) => (
-                <button key={u.id} className="user-btn" onClick={() => go(u.id)}>
-                  <strong>{u.name}</strong>
-                  <span className="muted small">{u.clinic_name ?? u.fund_name ?? "All funds & audit log"}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-        ))}
-      </main>
     </div>
   );
 }

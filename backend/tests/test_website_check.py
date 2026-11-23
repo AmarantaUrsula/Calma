@@ -9,7 +9,7 @@ from pydantic_ai.models.test import TestModel
 
 from backend import clock, website_check
 from backend.db import connect
-from backend.seed import seed
+from backend.seed import demo_credentials, seed
 
 # What the fake AI "reads" from the demo Desert Bloom page (matches the seeded rules).
 SAME = {
@@ -123,8 +123,8 @@ def test_admin_routes(env, monkeypatch):
     from backend import main
     monkeypatch.setattr(main, "model_for_extraction", lambda: TestModel(custom_output_args=SAME))
     c = TestClient(main.app)
-    h = {"Authorization": "Bearer " + c.post("/api/auth/login", json={"user_id": 8}).json()["token"]}
-    assert c.post("/api/admin/funds/3/check-now", headers=c.headers | {"Authorization": "Bearer " + c.post("/api/auth/login", json={"user_id": 1}).json()["token"]}).status_code == 403
+    h = {"Authorization": "Bearer " + c.post("/api/auth/login", json=demo_credentials(8)).json()["token"]}
+    assert c.post("/api/admin/funds/3/check-now", headers=c.headers | {"Authorization": "Bearer " + c.post("/api/auth/login", json=demo_credentials(1)).json()["token"]}).status_code == 403
     r = c.post("/api/admin/funds/3/check-now", headers=h)
     assert r.status_code == 200 and r.json()["status"] == "rules_same"
     assert c.put("/api/admin/funds/3/policy-url", headers=h, json={"policy_url": "file:///etc/passwd"}).status_code == 422

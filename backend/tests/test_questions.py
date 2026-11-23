@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from backend import clock
 from backend.db import connect
 from backend.matching import FundRule, Screening, match
-from backend.seed import seed
+from backend.seed import demo_credentials, seed
 
 
 def rule(fid, **kw):
@@ -67,7 +67,7 @@ def client(tmp_path, monkeypatch):
 
 
 def login(c, uid):
-    return {"Authorization": "Bearer " + c.post("/api/auth/login", json={"user_id": uid}).json()["token"]}
+    return {"Authorization": "Bearer " + c.post("/api/auth/login", json=demo_credentials(uid)).json()["token"]}
 
 
 def new_case(c, h, date="2026-11-30", cost=900):

@@ -8,7 +8,7 @@ from pydantic_ai.models.test import TestModel
 
 from backend import clock
 from backend.db import connect
-from backend.seed import seed
+from backend.seed import demo_credentials, seed
 
 START = datetime(2026, 11, 22, 15, tzinfo=timezone.utc)
 
@@ -27,7 +27,7 @@ def client(tmp_path, monkeypatch):
 
 
 def login(c, uid):
-    return {"Authorization": "Bearer " + c.post("/api/auth/login", json={"user_id": uid}).json()["token"]}
+    return {"Authorization": "Bearer " + c.post("/api/auth/login", json=demo_credentials(uid)).json()["token"]}
 
 
 def rules(c, h):

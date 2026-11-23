@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from backend import clock
 from backend.db import connect
-from backend.seed import seed
+from backend.seed import demo_credentials, seed
 
 
 @pytest.fixture()
@@ -24,7 +24,7 @@ def client(tmp_path, monkeypatch):
 
 
 def login(client, user_id):
-    tok = client.post("/api/auth/login", json={"user_id": user_id}).json()["token"]
+    tok = client.post("/api/auth/login", json=demo_credentials(user_id)).json()["token"]
     return {"Authorization": f"Bearer {tok}"}
 
 

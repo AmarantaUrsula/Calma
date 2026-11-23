@@ -12,6 +12,7 @@ authentication (SSO/MFA), HTTPS, encryption at rest and BAAs (see DESIGN.md).
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -27,7 +28,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel, Field
 
-from . import clock
+from . import auth, clock
 from .db import audit, connect, init_schema
 from . import questions as Q
 from .matching import FundRule, Screening, income_fpl_pct, match
@@ -117,22 +118,33 @@ def month_key() -> str:
 
 
 class User(BaseModel):
+    """What the app knows about a signed-in staff member. Deliberately has no password field."""
     id: int
     name: str
     role: str
     clinic_id: int | None
     fund_id: int | None
+    email: str | None = None
+
+
+def user_from_row(r: sqlite3.Row) -> User:
+    return User(id=r["id"], name=r["name"], role=r["role"], clinic_id=r["clinic_id"], fund_id=r["fund_id"],
+                email=r["email"])
 
 
 def current_user(authorization: str = Header(default=""), db: sqlite3.Connection = Depends(get_db)) -> User:
     token = authorization.removeprefix("Bearer ").strip()
-    entry = _sessions.get(token)
+    key = hashlib.sha256(token.encode()).hexdigest()  # sessions are kept by token hash, not the token itself
+    entry = _sessions.get(key)
     if not entry or clock.now() - entry[1] > SESSION_IDLE:
-        _sessions.pop(token, None)
+        _sessions.pop(key, None)
         raise HTTPException(401, "Please log in again.")
-    _sessions[token] = (entry[0], clock.now())
     row = db.execute("SELECT * FROM users WHERE id = ?", (entry[0],)).fetchone()
-    return User(**dict(row))
+    if not row or row["status"] != "active":  # disabled accounts are signed out right away
+        _sessions.pop(key, None)
+        raise HTTPException(401, "Please log in again.")
+    _sessions[key] = (entry[0], clock.now())
+    return user_from_row(row)
 
 
 def require(role: str):
@@ -325,36 +337,100 @@ def home():
     return RedirectResponse(os.environ.get("CALMA_WEB_URL", "http://localhost:5178"))
 
 
-# ---------- demo auth ----------
+# ---------- staff accounts: create account, log in, log out ----------
+# Patients never log in: they use the private link their clinic sends.
 
-@app.get("/api/demo/users")
-def demo_users(db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
-    rows = db.execute(
-        """SELECT u.id, u.name, u.role, cl.name AS clinic_name, f.name AS fund_name
-           FROM users u LEFT JOIN clinics cl ON cl.id = u.clinic_id LEFT JOIN funds f ON f.id = u.fund_id
-           ORDER BY u.id"""
-    ).fetchall()
-    return [dict(r) for r in rows]
+def _new_session(user_id: int) -> str:
+    token = secrets.token_urlsafe(32)
+    _sessions[hashlib.sha256(token.encode()).hexdigest()] = (user_id, clock.now())
+    return token
+
+
+@app.get("/api/auth/organizations")
+def organizations(db: sqlite3.Connection = Depends(get_db)) -> dict:
+    """For the create-account form: which clinic or fund do you work for?"""
+    clinics = db.execute("SELECT id, name, city, state FROM clinics ORDER BY name").fetchall()
+    funds = db.execute("SELECT id, name FROM funds WHERE kind = 'independent' ORDER BY name").fetchall()
+    return {"clinics": [dict(c) for c in clinics], "funds": [dict(f) for f in funds]}
+
+
+class SignupBody(BaseModel):
+    first_name: str = Field(min_length=1, max_length=60)
+    last_name: str = Field(min_length=1, max_length=60)
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=1, max_length=200)
+    confirm_password: str = Field(min_length=1, max_length=200)
+    role: Literal["clinic", "fund", "admin"]
+    org_id: int | None = None
+
+
+@app.post("/api/auth/signup", status_code=201)
+def signup(body: SignupBody, db: sqlite3.Connection = Depends(get_db)) -> dict:
+    """Create a staff account. It starts as 'pending' until a Calma admin approves it, so nobody
+    can give themselves access to a clinic's or fund's patients just by signing up."""
+    email = auth.normalize_email(body.email)
+    first, last = body.first_name.strip(), body.last_name.strip()
+    if not first or not last:
+        raise HTTPException(422, "Please enter your first and last name.")
+    if not auth.EMAIL_RE.match(email):
+        raise HTTPException(422, "Please enter a valid email address.")
+    if body.password != body.confirm_password:
+        raise HTTPException(422, "The passwords don't match.")
+    problem = auth.password_problem(body.password, email, first, last)
+    if problem:
+        raise HTTPException(422, problem)
+    clinic_id = fund_id = None
+    if body.role == "clinic":
+        if not body.org_id or not db.execute("SELECT 1 FROM clinics WHERE id = ?", (body.org_id,)).fetchone():
+            raise HTTPException(422, "Please choose your clinic.")
+        clinic_id = body.org_id
+    elif body.role == "fund":
+        if not body.org_id or not db.execute("SELECT 1 FROM funds WHERE id = ? AND kind = 'independent'", (body.org_id,)).fetchone():
+            raise HTTPException(422, "Please choose your fund.")
+        fund_id = body.org_id
+    if db.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
+        raise HTTPException(409, "An account with this email already exists. Try logging in.")
+    cur = db.execute(
+        """INSERT INTO users (name, role, clinic_id, fund_id, first_name, last_name, email, password_hash, status, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)""",
+        (f"{first} {last}", body.role, clinic_id, fund_id, first, last, email,
+         auth.hash_password(body.password), clock.now_iso()),
+    )
+    audit(db, f"user:{cur.lastrowid}", "account_requested", detail={"role": body.role, "clinic_id": clinic_id, "fund_id": fund_id})
+    return {"ok": True, "message": "Account created. A Calma administrator will review it, and then you can log in."}
 
 
 class LoginBody(BaseModel):
-    user_id: int
+    email: str = Field(max_length=254)
+    password: str = Field(max_length=200)
+
+
+BAD_LOGIN = "That email and password don't match an account."
 
 
 @app.post("/api/auth/login")
 def login(body: LoginBody, db: sqlite3.Connection = Depends(get_db)) -> dict:
-    row = db.execute("SELECT * FROM users WHERE id = ?", (body.user_id,)).fetchone()
-    if not row:
-        raise HTTPException(404, "No such user.")
-    token = secrets.token_urlsafe(32)
-    _sessions[token] = (row["id"], clock.now())
+    email = auth.normalize_email(body.email)
+    if auth.locked_out(email):
+        raise HTTPException(429, "Too many tries. Please wait 15 minutes and try again.")
+    row = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    if not auth.check_login(body.password, row["password_hash"] if row else None):
+        auth.record_failure(email)
+        audit(db, "anonymous", "login_failed")  # no email or password in the log
+        raise HTTPException(401, BAD_LOGIN)
+    if row["status"] == "pending":
+        raise HTTPException(403, "Your account is waiting for an administrator to approve it.")
+    if row["status"] != "active":
+        raise HTTPException(403, "This account is not active. Please contact your administrator.")
+    auth.clear_failures(email)
+    db.execute("UPDATE users SET last_login_at = ? WHERE id = ?", (clock.now_iso(), row["id"]))
     audit(db, f"user:{row['id']}", "login")
-    return {"token": token, "user": dict(row)}
+    return {"token": _new_session(row["id"]), "user": user_from_row(row).model_dump()}
 
 
 @app.post("/api/auth/logout")
 def logout(authorization: str = Header(default="")) -> dict:
-    _sessions.pop(authorization.removeprefix("Bearer ").strip(), None)
+    _sessions.pop(hashlib.sha256(authorization.removeprefix("Bearer ").strip().encode()).hexdigest(), None)
     return {"ok": True}
 
 
@@ -1190,6 +1266,40 @@ def clinic_remove_partnership(fund_id: int, user: User = Depends(require("clinic
     _end_partnership(db, user, user.clinic_id, fund_id)
     return clinic_partnerships(user, db)
 
+
+
+# ---------- admin: approve staff accounts ----------
+
+@app.get("/api/admin/users")
+def admin_users(user: User = Depends(require("admin")), db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
+    rows = db.execute(
+        """SELECT u.id, u.name, u.first_name, u.last_name, u.email, u.role, u.status, u.created_at,
+                  u.approved_at, u.last_login_at, cl.name AS clinic_name, f.name AS fund_name
+           FROM users u LEFT JOIN clinics cl ON cl.id = u.clinic_id LEFT JOIN funds f ON f.id = u.fund_id
+           ORDER BY CASE u.status WHEN 'pending' THEN 0 ELSE 1 END, u.role, u.name"""
+    ).fetchall()
+    return [dict(r) for r in rows]  # explicit columns: never the password hash
+
+
+@app.post("/api/admin/users/{user_id}/{action}")
+def admin_user_action(user_id: int, action: Literal["approve", "reject", "disable", "enable"],
+                      user: User = Depends(require("admin")), db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
+    target = db.execute("SELECT id, status FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not target:
+        raise HTTPException(404, "Account not found.")
+    if user_id == user.id:
+        raise HTTPException(422, "You can't change your own account here.")
+    allowed = {"approve": ("pending",), "reject": ("pending",), "disable": ("active",), "enable": ("disabled",)}
+    if target["status"] not in allowed[action]:
+        raise HTTPException(409, f"Can't {action} an account that is {target['status']}.")
+    new = {"approve": "active", "reject": "rejected", "disable": "disabled", "enable": "active"}[action]
+    if action == "approve":
+        db.execute("UPDATE users SET status = 'active', approved_by = ?, approved_at = ? WHERE id = ?",
+                   (user.id, clock.now_iso(), user_id))
+    else:
+        db.execute("UPDATE users SET status = ? WHERE id = ?", (new, user_id))
+    audit(db, f"user:{user.id}", f"account_{action}d", detail={"user_id": user_id})
+    return admin_users(user, db)
 
 
 # ---------- the web app (production only; must be the last route) ----------

@@ -40,16 +40,45 @@ The repo includes a `Dockerfile` (builds the React app, then serves it from the 
 What to know:
 - **Data resets:** the free plan's disk is temporary, so the demo data resets whenever the service restarts or redeploys. Keeping data needs a Render persistent disk or Postgres.
 - **Sleep:** free services sleep when unused. The first visit after a while takes about a minute.
-- **Demo only:** the sign-in has no passwords. Use made-up data only. Real patient data needs real sign-in and HIPAA business associate agreements with Render and OpenAI.
+- **Demo data only:** real patient data still needs two-factor login, password reset and HIPAA business associate agreements with Render and OpenAI.
+
+## Demo accounts
+
+Every demo account uses the made-up password **`calma-demo-2026`** (it's set in `backend/seed.py`). The emails use the reserved `example.org` domain.
+
+| Who | Email | Portal |
+|---|---|---|
+| Rosa, Mesa front desk | `rosa@mesa.example.org` | Clinic (NM) |
+| Dana, Prairie front desk | `dana@prairie.example.org` | Clinic (KS) |
+| Sam | `sam@desertbloom.example.org` | Desert Bloom Fund |
+| Jordan | `jordan@heartland.example.org` | Heartland Access Fund |
+| Alex | `alex@openroad.example.org` | Open Road Travel Fund |
+| Kai | `kai@latercare.example.org` | Later Care Fund |
+| Mia | `mia@youthaccess.example.org` | Youth Access Fund |
+| Lu | `lu@enchantedcircle.example.org` | Enchanted Circle Care Fund |
+| Admin | `admin@calma.example.org` | Admin |
+
+## Accounts and passwords
+
+- **Who logs in:** clinic staff, fund staff and Calma admins. **Patients never log in.** They use the private link their clinic sends, which becomes their status page.
+- **Create an account** (`/signup`): first name, last name, work email, where you work (a clinic, a fund, or Calma admin), password and confirm password. New accounts start as **waiting for approval**. A Calma admin approves or rejects them under **Admin → Staff accounts**, so nobody can give themselves access to patients' information, or make themselves an admin, just by signing up. Admins can also disable an account, which signs that person out right away.
+- **Log in** (`/login`): email and password. A wrong password and an unknown email get the same message. After 5 misses, that email is locked for 15 minutes.
+- **What's stored for each user** (`users` table): name, email (lowercase, unique), role, clinic or fund, status, and dates (created, approved, last login). Plus `password_hash`. **The password itself is never stored.**
+- **How passwords are protected** (`backend/auth.py`):
+  - **scrypt hash:** each password is run through scrypt, a slow, memory-hard, one-way function, with a unique random salt. It's stored as `scrypt$N$r$p$salt$hash`. A copy of the database can't be turned back into passwords, and the same password gives a different hash for each user.
+  - **Login re-hashes:** login re-hashes what was typed, using the salt and settings stored in that user's hash, then compares in constant time. Sign-up and login can't drift out of sync, because the settings travel with each hash.
+  - **Pepper:** an optional server secret, `CALMA_PASSWORD_PEPPER`, is mixed in. It's kept in Render's settings, not the database, so a stolen database alone isn't enough to even start guessing. On Render it's generated automatically. Don't change it later, or every password stops working.
+  - **Never sent out:** no API response, log, audit entry or AI call ever includes a password or its hash. Sessions are random tokens, kept on the server only as a hash, and expire after 30 idle minutes.
+- **Not built yet:** password reset and email verification (both need email sending), and two-factor login.
 
 ## Demo walkthrough
 
-1. Open http://localhost:5178. Sign in as **Rosa (Mesa front desk)**.
+1. Open http://localhost:5178 and **log in** as Rosa (`rosa@mesa.example.org`; demo password below).
 2. Under **New appointment**, click **Create link**, then **Open patient link**.
 3. As the patient: pick English or Español and answer the 6 questions. Try Texas, 3 people, $2,000/month, 16 weeks, needs travel, age 22.
 4. The results page shows each fund as *Waiting for an answer*, plus the amount the patient may owe and the clinic's phone number.
 5. Back as Rosa: click the case and approve the **Mesa Justice Fund** pledge. Watch the monthly limit go down.
-6. Sign out, then sign in as **Sam (Desert Bloom)**. The patient shows up under *Needs decision*; approve it.
+6. Log out, then log in as Sam (`sam@desertbloom.example.org`). The patient shows up under *Needs decision*; approve it.
 7. The patient's page now shows *Approved* for both. Mark the visit done as Rosa. Sam then sees *Owed to clinic* and clicks **Mark paid**.
 8. **Admin** shows every fund's rules and the audit log.
 9. **AI rule updates:** as Admin, click **Update rules** next to a fund and paste its policy text. Then click **Suggest rules with AI**. You'll see the current rules next to the suggested ones, with the exact quote each came from. Fix anything wrong, then click **Approve and make live** (or **Reject**). Matching uses the new rules right away, and the audit log records who approved and what they edited.
@@ -116,15 +145,16 @@ What to know:
 | `backend/seed.py` | Made-up clinics, funds and staff |
 | `backend/rules_extractor.py` | Fund Rules Extractor (PydanticAI, structured output) and the code that compares a proposal with the current rules |
 | `Dockerfile`, `render.yaml` | Production build (one service) and Render Blueprint |
+| `backend/auth.py` | Password hashing (scrypt + salt + optional pepper), password rules, login lockout |
 | `backend/llm.py` | Model and key setup (OpenAI direct or Portkey) |
 | `backend/questions.py` | Intake question catalog and which questions each clinic's patients see (and why) |
 | `backend/website_check.py` | Scheduled website check: safe fetching, robots.txt, change detection, command-line runner |
 | `backend/proposals.py` | Turns policy text into a proposed rule version (shared by the paste screen and the website check) |
 | `data/demo_pages/` | Made-up fund eligibility pages for the demo |
-| `backend/tests/` | Matching, end-to-end, Rules Extractor, website-check, fund-rules, intake-question and partnership tests (fake model, no network, no API cost) |
+| `backend/tests/` | Matching, end-to-end, Rules Extractor, website-check, fund-rules, intake-question, partnership and account tests (fake model, no network, no API cost) |
 | `frontend/src/pages/` | `Patient.tsx` (English/Spanish), `Clinic.tsx`, `Fund.tsx`, `FundRules.tsx` (rules editor shared by funds and clinics), `Partnerships.tsx` (fund requests, clinic accepts), `Admin.tsx`, `Staff.tsx` (sign-in) |
 | `frontend/src/i18n.ts` | All patient text in English and Spanish |
 
 ## Not production-ready
 
-The demo sign-in has no passwords. A real version needs proper sign-in with two-factor login, HTTPS, encryption at rest, hosting under a HIPAA business associate agreement, real SMS/email delivery, and a native-speaker review of the Spanish. See DESIGN.md section B.
+Real sign-in is built (see above). Before real patient data, it still needs password reset, two-factor login, HTTPS, encryption at rest, hosting under a HIPAA business associate agreement, real SMS/email delivery, and a native-speaker review of the Spanish. See DESIGN.md section B.

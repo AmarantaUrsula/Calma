@@ -9,7 +9,7 @@ from pydantic_ai.models.test import TestModel
 from backend import clock
 from backend.db import connect
 from backend.rules_extractor import ExtractedCriteria, build_proposal, quote_found
-from backend.seed import seed
+from backend.seed import demo_credentials, seed
 
 POLICY = """Desert Bloom Fund helps people who live in Texas, New Mexico, Arizona, or Colorado.
 You may qualify if your household income is at or below 250% of the federal poverty level.
@@ -80,7 +80,7 @@ def client(tmp_path, monkeypatch):
 
 
 def login(client, uid):
-    return {"Authorization": "Bearer " + client.post("/api/auth/login", json={"user_id": uid}).json()["token"]}
+    return {"Authorization": "Bearer " + client.post("/api/auth/login", json=demo_credentials(uid)).json()["token"]}
 
 
 def test_extract_review_approve_changes_matching(client):
