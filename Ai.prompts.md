@@ -580,3 +580,11 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 > it deployed and login works now
 
 **Outcome:** Calma is live on Render, and login works with the demo password set in Render. Left before sharing: check the Report Builder works on Render (if not, the new error message names the cause, usually `OPENAI_API_KEY`), fill the Render link into `DEMO_GUIDE.md`, and send it with the password shared separately.
+
+---
+
+## Prompt 42 — 2026-11-23
+
+> People will be testing this on their own computers - does that mean we should change the readme file to have the password that works on the render hosted version? or no?
+
+**Outcome:** Advised no. The README is on a public GitHub repo, so the Render password there would be public: anyone could log in as admin, see and change the demo, approve accounts, and spend OpenAI credits with "Check now" or the Report Builder. Colleagues "on their own computers" just open the Render link in a browser and never use the README. Share the password privately (email or message, or a copy of the guide that isn't committed). The README's local password only matters for someone who downloads and runs the code themselves. No changes made.
