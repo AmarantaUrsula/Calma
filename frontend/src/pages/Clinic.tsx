@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, errText, money } from "../api";
 import FundRules, { ConfirmBanner, RulesView } from "./FundRules";
 import { ClinicPartnerships, Partnership } from "./Partnerships";
+import Reports from "./Reports";
 import { answerRows, Badge, DecisionControls, StaffShell } from "./Staff";
 
 type Pledge = {
@@ -28,7 +29,7 @@ export default function Clinic() {
   const [cases, setCases] = useState<Case[]>([]);
   const [owed, setOwed] = useState<Owed[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
-  const [tab, setTab] = useState<"cases" | "reimb" | "rules" | "questions" | "partners">("cases");
+  const [tab, setTab] = useState<"cases" | "reimb" | "rules" | "questions" | "partners" | "reports">("cases");
   const [partners, setPartners] = useState<Partnership[]>([]);
   const [fundRules, setFundRules] = useState<RulesView[]>([]);
   const [err, setErr] = useState("");
@@ -79,12 +80,15 @@ export default function Clinic() {
       <div className="tabs" role="tablist">
         <button role="tab" aria-selected={tab === "cases"} onClick={() => setTab("cases")}>Cases ({cases.length})</button>
         <button role="tab" aria-selected={tab === "reimb"} onClick={() => setTab("reimb")}>Reimbursement</button>
+        <button role="tab" aria-selected={tab === "reports"} onClick={() => setTab("reports")}>Reports</button>
         <button role="tab" aria-selected={tab === "partners"} onClick={() => setTab("partners")}>Partner funds{partners.some((p) => p.status === "pending") ? " •" : ""}</button>
         <button role="tab" aria-selected={tab === "questions"} onClick={() => setTab("questions")}>Intake questions</button>
         <button role="tab" aria-selected={tab === "rules"} onClick={() => setTab("rules")}>Our fund's rules{fundRules.some((v) => v.needs_confirm) ? " •" : ""}</button>
       </div>
 
       {tab === "questions" && <IntakeQuestions />}
+
+      {tab === "reports" && <Reports />}
 
       {tab === "partners" && <ClinicPartnerships rows={partners} onChange={load} />}
 

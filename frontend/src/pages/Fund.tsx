@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, errText, money } from "../api";
 import FundRules, { ConfirmBanner, RulesView } from "./FundRules";
 import { FundPartnerships } from "./Partnerships";
+import Reports from "./Reports";
 import { answerRows, Badge, DecisionControls, StaffShell } from "./Staff";
 
 type Item = {
@@ -23,7 +24,7 @@ type Summary = {
 export default function Fund() {
   const [s, setS] = useState<Summary | null>(null);
   const [items, setItems] = useState<Item[]>([]);
-  const [tab, setTab] = useState<"pending" | "approved" | "history" | "rules" | "partners">("pending");
+  const [tab, setTab] = useState<"pending" | "approved" | "history" | "rules" | "partners" | "reports">("pending");
   const [rulesView, setRulesView] = useState<RulesView | null>(null);
   const [err, setErr] = useState("");
   const load = async () => {
@@ -79,11 +80,14 @@ export default function Fund() {
         <button role="tab" aria-selected={tab === "pending"} onClick={() => setTab("pending")}>Needs decision ({pending.length})</button>
         <button role="tab" aria-selected={tab === "approved"} onClick={() => setTab("approved")}>Approved / owed ({approved.length})</button>
         <button role="tab" aria-selected={tab === "history"} onClick={() => setTab("history")}>History ({history.length})</button>
+        <button role="tab" aria-selected={tab === "reports"} onClick={() => setTab("reports")}>Reports</button>
         <button role="tab" aria-selected={tab === "partners"} onClick={() => setTab("partners")}>Partner clinics</button>
         <button role="tab" aria-selected={tab === "rules"} onClick={() => setTab("rules")}>My eligibility rules{rulesView?.needs_confirm ? " •" : ""}</button>
       </div>
 
       {tab === "partners" && <FundPartnerships onChange={load} />}
+
+      {tab === "reports" && <Reports />}
 
       {tab === "rules" && rulesView && (
         <FundRules view={rulesView} onSaved={(v) => { setRulesView(v); load(); }} />

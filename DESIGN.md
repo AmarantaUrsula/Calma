@@ -42,6 +42,13 @@ Based on the product description and flowchart (`design-flowchart.webp`).
     - **Demo notice:** patient screens (English/Spanish) and the login pages say not to enter real information.
     - **Colleague guide:** `DEMO_GUIDE.md` walks colleagues through three 5-minute scenarios and asks for feedback.
 
+17. **Reports (2026-11-23):** a built-in Reports page plus an Excel export, rather than a separate BI tool.
+    - **Scope:** clinic sees its own cases, a fund sees its own pledges, admin sees everything.
+    - **Settings:** measure (disbursed or pledged), date basis, and up to 3 group-by criteria. Funds get only the criteria they already see.
+    - **Charts:** table, bar (1–2 criteria, stacked for 2) or pie (1 criterion, at most 6 slices). Chart colors come from a categorical palette checked with the dataviz validator (colorblind and contrast checks).
+    - **Excel:** a `.xlsx` with Report and Data sheets, de-identified and banded. Groups under 5 patients are flagged, and downloads are audit-logged.
+    - **Report Builder agent:** turns a plain-English request into report *settings* only. It never sees data, its output is checked in code against the user's role, and the numbers come from the deterministic engine.
+
 ## Guiding principle: the AI never decides who gets money
 
 Eligibility and pledge amounts must be **deterministic, auditable rules**, not LLM output. These decisions move real money for a vulnerable population. Every result must be explainable ("matched because: lives in TX, income ≤ 200% FPL"), and the same input must always give the same answer. So the **matching engine is plain Python code, not an agent**. Agents go where language is the hard part: turning messy fund policies into rules, explaining things in plain words, and summarizing cases for staff.

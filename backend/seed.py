@@ -171,6 +171,81 @@ def seed(conn) -> None:
     conn.commit()
 
 
+def add_history(conn, n: int = 90, months: int = 6, rng_seed: int = 7) -> int:
+    """Made-up past cases (closed, with approved and paid pledges) so reports have something to show.
+    Run through the real matching engine, so pledges follow each fund's rules. Deterministic."""
+    import random
+    import secrets
+    from datetime import timedelta
+
+    from . import clock
+    from .main import approved_rules, clinic_fund_ids, question_plan, screening_of
+    from .matching import match
+
+    rng = random.Random(rng_seed)
+    today = clock.today()
+    homes = {1: ["TX"] * 10 + ["NM"] * 7 + ["AZ", "AZ", "CO", "OK"], 2: ["KS"] * 11 + ["MO"] * 4 + ["OK"] * 3 + ["TX", "NE"]}
+    care_state = {1: "NM", 2: "KS"}
+    made = 0
+    for _ in range(n):
+        clinic = rng.choice([1, 1, 2])
+        appt = today - timedelta(days=rng.randint(4, months * 30))
+        created = appt - timedelta(days=rng.randint(3, 10))
+        home = rng.choice(homes[clinic])
+        weeks = min(24, max(5, int(rng.triangular(5, 24, 8))))
+        travel = home != care_state[clinic] or rng.random() < 0.25
+        cost = rng.randrange(650, 1400, 25) if weeks < 14 else rng.randrange(1500, 3200, 50)
+        hh = rng.choice([1, 1, 2, 2, 3, 3, 4, 5])
+        cur = conn.execute(
+            """INSERT INTO cases (clinic_id, token, token_expires_at, appointment_date, procedure_cost, contact_method,
+               language, status, state, household_size, monthly_income, gestational_weeks, needs_travel, age,
+               care_state, travel_miles, nights_away, meal_days, childcare_days, insurance_coverage, unhoused,
+               created_at, submitted_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 'closed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (clinic, secrets.token_urlsafe(24), (appt + timedelta(days=2)).isoformat() + "T00:00:00+00:00",
+             appt.isoformat(), cost, rng.choice(["text", "text", "email"]), "es" if rng.random() < 0.3 else "en",
+             home, hh, rng.randrange(500, 900 * hh + 1800, 50), weeks, int(travel), rng.randint(16, 42),
+             care_state[clinic],
+             rng.randrange(60, 650, 10) if travel else None, rng.choice([0, 1, 1, 2]) if travel else None,
+             rng.choice([0, 1, 2]) if travel else None, rng.choice([0, 0, 1, 2]) if travel else None,
+             rng.choice(["no"] * 8 + ["unsure", "yes"]), int(rng.random() < 0.06),
+             created.isoformat() + "T15:00:00+00:00", created.isoformat() + "T15:00:00+00:00"),
+        )
+        case_id = cur.lastrowid
+        conn.execute("UPDATE cases SET questions_asked = ? WHERE id = ?",
+                     (json.dumps(question_plan(conn, clinic)[0]), case_id))
+        case = conn.execute("SELECT * FROM cases WHERE id = ?", (case_id,)).fetchone()
+        result = match(screening_of(case), cost, approved_rules(conn, clinic_fund_ids(conn, clinic)))
+        open_left = False
+        for m in result.matches:
+            decided = created + timedelta(days=rng.randint(0, 3))
+            if rng.random() < 0.13:
+                status, amount, paid = "declined", None, None
+            else:
+                amount = m.suggested_amount if rng.random() < 0.85 else max(25, round(m.suggested_amount * 0.8 / 5) * 5)
+                if m.category == "practical":
+                    paid = appt - timedelta(days=1)
+                elif m.kind == "clinic":
+                    paid = appt
+                else:
+                    paid = appt + timedelta(days=rng.randint(3, 28))
+                status = "paid" if paid <= today else "approved"
+                open_left = open_left or status == "approved"
+                paid = paid if status == "paid" else None
+            conn.execute(
+                """INSERT INTO pledges (case_id, fund_id, criteria_id, suggested_amount, approved_amount, status,
+                   reasons, category, decided_by, decided_at, paid_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)""",
+                (case_id, m.fund_id, m.criteria_id, m.suggested_amount, amount, status, json.dumps(m.reasons),
+                 m.category, decided.isoformat() + "T16:00:00+00:00",
+                 paid.isoformat() + "T17:00:00+00:00" if paid else None),
+            )
+        if open_left:
+            conn.execute("UPDATE cases SET status = 'appointment_done' WHERE id = ?", (case_id,))
+        made += 1
+    conn.commit()
+    return made
+
+
 def reset() -> None:
     p = db_path()
     if p.exists():
@@ -178,9 +253,10 @@ def reset() -> None:
     conn = connect(p)
     try:
         seed(conn)
+        n = add_history(conn)
     finally:
         conn.close()
-    print(f"Seeded {p}")
+    print(f"Seeded {p} (with {n} past cases for reports)")
 
 
 if __name__ == "__main__":

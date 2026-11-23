@@ -132,6 +132,13 @@ Sending the demo to colleagues? Share [DEMO_GUIDE.md](DEMO_GUIDE.md) (fill in th
 
     They're labeled "Real fund · reference only". They have **no partner clinics and no accounts**, so they're never matched with the made-up demo patients. Their rules start empty. The website check reads each page and the AI suggests rules (with quotes) for an admin to review. A real pledge amount must be entered before approval, since these funds don't publish one. Calma reads these pages rarely (every 60 days), identifies itself, and follows each site's robots.txt.
 
+17. **Reports:** every portal has a **Reports** tab: clinic (its own cases), fund (only its own pledges), and admin (all organizations).
+    - **Describe the report you want:** type something like *"bar chart of money paid out each month since June, split by travel help vs procedure"*. The **Report Builder** AI picks the settings. It sees only your sentence and the allowed options, never patient data. The numbers come from Calma's report engine, and you can change any setting afterward.
+    - **Or set it yourself:** choose the period, the measure (**disbursed** = pledges marked paid, or **pledged** = approved), which date counts (paid, approved or appointment), and group by up to **three** criteria: fund, clinic, type of help, month, week, home state, state of care, income band, weeks pregnant, age, language, traveled. Funds get fewer criteria: only what a fund already sees.
+    - **Show as:** a table (any number of criteria), a bar chart (1 criterion, or 2 as stacked bars), or a pie chart (1 criterion; more than 6 slices fold into "Other"). Each chart has hover details and a "show as a table" option.
+    - **Download Excel:** a `.xlsx` file with a **Report** sheet (the filters and totals) and a **Data** sheet (one de-identified row per pledge: case number, bands instead of exact income, age or weeks; no names or contact details). Groups with fewer than 5 patients are flagged, and every download is recorded in the audit log.
+    - **Demo history:** demo data now includes 90 made-up past cases over six months, so the reports have something to show.
+
 ## AI setup
 
 - The model comes from `OPENAI_MODEL` (default `gpt-5.6-luna`), through OpenAI's Responses API.
@@ -153,13 +160,14 @@ Sending the demo to colleagues? Share [DEMO_GUIDE.md](DEMO_GUIDE.md) (fill in th
 | `backend/seed.py` | Made-up clinics, funds and staff |
 | `backend/rules_extractor.py` | Fund Rules Extractor (PydanticAI, structured output) and the code that compares a proposal with the current rules |
 | `Dockerfile`, `render.yaml` | Production build (one service) and Render Blueprint |
+| `backend/reports.py`, `backend/report_agent.py` | Report engine (scope, grouping, Excel) and the Report Builder agent (plain English → settings) |
 | `backend/auth.py` | Password hashing (scrypt + salt + optional pepper), password rules, login lockout |
 | `backend/llm.py` | Model and key setup (OpenAI direct or Portkey) |
 | `backend/questions.py` | Intake question catalog and which questions each clinic's patients see (and why) |
 | `backend/website_check.py` | Scheduled website check: safe fetching, robots.txt, change detection, command-line runner |
 | `backend/proposals.py` | Turns policy text into a proposed rule version (shared by the paste screen and the website check) |
 | `data/demo_pages/` | Made-up fund eligibility pages for the demo |
-| `backend/tests/` | Matching, end-to-end, Rules Extractor, website-check, fund-rules, intake-question, partnership and account tests (fake model, no network, no API cost) |
+| `backend/tests/` | Matching, end-to-end, Rules Extractor, website-check, fund-rules, intake-question, partnership, account and report tests (fake model, no network, no API cost) |
 | `frontend/src/pages/` | `Patient.tsx` (English/Spanish), `Clinic.tsx`, `Fund.tsx`, `FundRules.tsx` (rules editor shared by funds and clinics), `Partnerships.tsx` (fund requests, clinic accepts), `Admin.tsx`, `Staff.tsx` (sign-in) |
 | `frontend/src/i18n.ts` | All patient text in English and Spanish |
 

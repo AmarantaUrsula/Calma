@@ -437,3 +437,44 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 > If I buy the lowest plan in Render will it not wipe the database every time
 
 **Outcome:** Explained: a paid plan alone isn't enough. Render's normal disk is temporary on every plan, so a redeploy or restart still erases the SQLite file. The paid plan stops the free-plan sleeping (so fewer restarts), but keeping data also needs a **persistent disk** (a paid add-on for paid services) with `CALMA_DB` pointing to it, or a move to Postgres. Offered to add the disk setup to `render.yaml`.
+
+---
+
+## Prompt 30 — 2026-11-23
+
+> could we also make it that any seat can download the data pertinent to their organization (or for the admin, all data) in excel or something similar so they can generate reports? Or is there a better way to do this that you suggest? Ideally they could generate simple reports of the amount disbursed over a chosen time period by at one, two, or three criteria and make either tables, pie graphs, or bar charts. What do you think is the best approach for this?
+
+**Outcome:** Recommended building both: a **Reports** page in each portal (choose dates, a measure and up to three "group by" criteria, then see a table, bar chart or pie chart) **and** an Excel download of the same report plus the underlying rows, scoped to each organization and de-identified, with every download logged. Laid out the scoping, the privacy safeguards and the choices to confirm. No code yet.
+
+---
+
+## Prompt 31 — 2026-11-23
+
+> Yes, build it
+>
+> *(Context: "it" = the Reports page with tables, bar and pie charts, plus Excel downloads scoped to each organization.)*
+
+*(Follow-up typed while I was working:)*
+
+> can it be a thing of where the user types what visual it wants to summarize the data and an agent makes it?
+
+**Outcome:** Built **Reports** for every role, plus the **Report Builder** agent from the follow-up.
+- **Report engine** (`backend/reports.py`):
+  - **Scope:** clinic sees its own cases, fund sees its own pledges, admin sees all.
+  - **Measures:** disbursed (paid) or pledged (approved).
+  - **Dates:** paid, approved or appointment date, over a chosen period.
+  - **Grouping:** up to 3 criteria (fund, clinic, type of help, month, week, home state, state of care, income band, weeks pregnant, age, language, traveled). Funds get only the criteria they already see.
+  - **Results:** totals of dollars, patients and pledges, with groups under 5 patients flagged.
+- **Excel download:** `.xlsx` with a Report sheet (filters, totals, a SUM formula) and a Data sheet (de-identified, banded, filterable). Every download is audit-logged. Added `openpyxl`.
+- **Report Builder agent** (`backend/report_agent.py`, PydanticAI structured output): turns a plain-English request into report *settings* only. It never sees data; code enforces role limits and chart rules; the numbers always come from the engine. Live test: "bar chart of money paid out each month since June, split by travel help vs procedure" → June 1–today, disbursed, month then type of help, bar chart.
+- **Reports page** (in the clinic, fund and admin portals):
+  - a "Describe the report you want" box, plus manual controls (period presets, measure, date basis, three group-by pickers)
+  - Table / Bar / Pie, and Dollars / Patients
+  - summary tiles and Download Excel
+  - charts drawn in plain SVG/HTML: horizontal bars, stacked bars for 2 criteria (top 6 + Other, legend), pie (≤6 slices + Other), hover tooltips, "show as a table"
+- **Chart colors:** checked with the dataviz palette validator. The first, more muted earthy palette failed the colorblind-safety and "reads as gray" checks, so I adjusted it to one that passes every check: slate blue, terracotta, sage teal, ochre, plum, olive.
+- **Demo history:** `add_history()` adds 90 made-up past cases over six months through the real matching engine; `reset()` and fresh Render instances include it. Added to the current demo database without wiping it.
+- **Tested:** 78 automated tests pass (6 new: totals add up, per-organization scope matches the database, measures and dates, 3 criteria, role limits, Excel sheets and de-identified columns, audit entry, agent rule enforcement, agent using the same numbers). In the browser, the live agent request produced the stacked bar chart, a pie by fund worked, and the Excel download came through.
+- **Notes:**
+  - After the folder rename, the virtual environment's `pip` command still points at the old `ataraxia` path, so I used `.venv/bin/python -m pip`.
+  - "Try Calma.docx", which the user added on GitHub, is missing from the local folder. I didn't restore it or commit its deletion.

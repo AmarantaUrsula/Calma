@@ -1303,6 +1303,103 @@ def admin_user_action(user_id: int, action: Literal["approve", "reject", "disabl
     return admin_users(user, db)
 
 
+# ---------- reports: tables, charts, Excel, and the Report Builder agent ----------
+
+from fastapi.responses import Response  # noqa: E402
+
+from . import report_agent, reports  # noqa: E402
+
+# Tests swap this for a fake model so no real AI call is made.
+model_for_reports = llm.get_model
+
+
+def _report_user(user: User) -> User:
+    if user.role not in ("clinic", "fund", "admin"):
+        raise HTTPException(403, "Not allowed.")
+    return user
+
+
+def _scope_name(db: sqlite3.Connection, user: User) -> str:
+    if user.role == "clinic":
+        return db.execute("SELECT name FROM clinics WHERE id = ?", (user.clinic_id,)).fetchone()[0]
+    if user.role == "fund":
+        return db.execute("SELECT name FROM funds WHERE id = ?", (user.fund_id,)).fetchone()[0]
+    return "All organizations (admin)"
+
+
+class ReportParams(BaseModel):
+    measure: Literal["disbursed", "pledged"] = "disbursed"
+    date_basis: Literal["paid", "approved", "appointment"] = "paid"
+    start: date
+    end: date
+    group_by: list[str] = Field(default_factory=list, max_length=3)
+
+
+def _check_params(p: ReportParams, user: User) -> None:
+    allowed = {d["id"] for d in reports.dims_for(user.role)}
+    bad = [d for d in p.group_by if d not in allowed]
+    if bad:
+        raise HTTPException(422, f"Not available for your role: {', '.join(bad)}.")
+    if len(set(p.group_by)) != len(p.group_by):
+        raise HTTPException(422, "Each criterion can only be used once.")
+    if p.start > p.end:
+        raise HTTPException(422, "The start date is after the end date.")
+
+
+def _run(db: sqlite3.Connection, user: User, p: ReportParams) -> tuple[list[dict], dict]:
+    rows = reports.fetch_rows(db, user.role, user.clinic_id, user.fund_id, p.measure, p.date_basis, p.start, p.end)
+    return rows, reports.group(rows, p.group_by)
+
+
+@app.get("/api/reports/options")
+def report_options(user: User = Depends(current_user), db: sqlite3.Connection = Depends(get_db)) -> dict:
+    _report_user(user)
+    return {"dimensions": reports.dims_for(user.role),
+            "measures": [{"id": k, "label": v[0]} for k, v in reports.MEASURES.items()],
+            "date_bases": [{"id": k, "label": v} for k, v in reports.DATE_BASES.items()],
+            "scope_name": _scope_name(db, user), "today": clock.today().isoformat()}
+
+
+@app.post("/api/reports/run")
+def report_run(p: ReportParams, user: User = Depends(current_user), db: sqlite3.Connection = Depends(get_db)) -> dict:
+    _report_user(user)
+    _check_params(p, user)
+    _, result = _run(db, user, p)
+    return {**result, "group_by": p.group_by, "labels": [reports.DIMENSIONS[d][0] for d in p.group_by]}
+
+
+@app.post("/api/reports/export")
+def report_export(p: ReportParams, user: User = Depends(current_user), db: sqlite3.Connection = Depends(get_db)) -> Response:
+    _report_user(user)
+    _check_params(p, user)
+    rows, result = _run(db, user, p)
+    filters = reports.describe_filters(p.measure, p.date_basis, p.start, p.end, p.group_by, _scope_name(db, user))
+    data = reports.to_xlsx("Calma report", filters, p.group_by, result, rows, user.role)
+    audit(db, f"user:{user.id}", "report_downloaded", detail=reports.audit_detail(p.measure, p.date_basis, p.start, p.end, p.group_by, len(rows)))
+    name = f"calma-report-{p.start.isoformat()}-to-{p.end.isoformat()}.xlsx"
+    return Response(data, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+class AskBody(BaseModel):
+    request: str = Field(min_length=3, max_length=500)
+
+
+@app.post("/api/reports/ask")
+async def report_ask(body: AskBody, user: User = Depends(current_user), db: sqlite3.Connection = Depends(get_db)) -> dict:
+    """Report Builder: plain English -> settings (AI) -> numbers (report engine, no AI)."""
+    _report_user(user)
+    try:
+        spec, notes = await report_agent.build_spec(body.request, user.role, clock.today(), model_for_reports())
+    except Exception as e:
+        raise HTTPException(502, f"The report helper couldn't understand that ({type(e).__name__}). Try rephrasing, or use the controls.")
+    p = ReportParams(measure=spec.measure, date_basis=spec.date_basis, start=spec.start, end=spec.end, group_by=spec.group_by)
+    _, result = _run(db, user, p)
+    audit(db, f"user:{user.id}", "report_builder_used", detail={"group_by": p.group_by, "view": spec.view})
+    return {"spec": {**p.model_dump(mode="json"), "view": spec.view, "chart_value": spec.chart_value, "title": spec.title},
+            "notes": notes, "result": {**result, "group_by": p.group_by, "labels": [reports.DIMENSIONS[d][0] for d in p.group_by]}}
+
+
 # ---------- the web app (production only; must be the last route) ----------
 
 @app.get("/{path:path}", include_in_schema=False)

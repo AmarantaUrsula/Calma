@@ -17,6 +17,16 @@
   --green: #44684a;       /* sage: approved */
   --amber: #82561c;       /* ochre: waiting */
   --red: #a3472e;         /* terracotta: problems */
+  /* Chart series, in fixed order. Validated with the dataviz palette checker on the card surface:
+     lightness band, chroma floor, colorblind (CVD) separation and normal-vision separation all pass.
+     Ochre is under 3:1 contrast, so charts always carry a legend/labels and a table view. */
+  --series-1: #3567a8;    /* slate blue */
+  --series-2: #c8612f;    /* terracotta */
+  --series-3: #2f8f6a;    /* sage teal */
+  --series-4: #c9900a;    /* ochre */
+  --series-5: #9a4f9a;    /* plum */
+  --series-6: #5a7f2a;    /* olive */
+  --series-other: #a8a296; /* warm gray: "Other" */
   font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   color: var(--text);
   background: var(--bg);
@@ -243,3 +253,35 @@ h2.sub { margin-top: 14px; }
 /* ---------- demo notice ---------- */
 .demo-banner { background: rgba(123, 82, 54, .09); border-bottom: 1px solid rgba(123, 82, 54, .25); color: var(--heading);
   text-align: center; font-size: 14px; padding: 9px 16px; line-height: 1.4; }
+
+/* ---------- reports ---------- */
+.ask-card { border-color: var(--accent); }
+.ask-row { display: flex; gap: 10px; }
+.ask-row .input { flex: 1; font-size: 16px; padding: 11px 14px; }
+.ask-result { margin-top: 10px; padding: 10px 12px; background: var(--accent-wash); border-radius: 10px; display: flex; flex-direction: column; gap: 3px; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end; margin-bottom: 12px; }
+.controls:last-child { margin-bottom: 0; }
+.controls label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.view-toggle { display: flex; flex-direction: column; gap: 4px; }
+.view-toggle .lang-toggle { margin-left: 0; }
+.lang-toggle button:disabled { opacity: .35; cursor: not-allowed; }
+.hbars { display: flex; flex-direction: column; gap: 6px; position: relative; }
+.hbar-row { display: grid; grid-template-columns: minmax(120px, 240px) 1fr minmax(80px, auto); gap: 12px; align-items: center; padding: 2px 0; }
+.hbar-row:hover .hbar-label { color: var(--text); font-weight: 600; }
+.hbar-label { font-size: 14px; text-align: right; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbar-track { height: 20px; display: flex; align-items: center; border-left: 1px solid var(--line); }
+.hbar, .hbar-stack { height: 20px; border-radius: 0 4px 4px 0; display: flex; gap: 2px; overflow: hidden; min-width: 2px; }
+.seg { height: 100%; min-width: 2px; }
+.hbar-value { font-size: 14px; font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-bottom: 10px; }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+.stacked, .pie-wrap { position: relative; }
+.pie-wrap { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
+.pie-legend { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.pie-legend li { display: grid; grid-template-columns: 12px auto auto; gap: 8px; align-items: center; }
+.chart-tip { position: absolute; pointer-events: none; background: var(--text); color: var(--panel); font-size: 13px;
+  padding: 6px 9px; border-radius: 8px; white-space: nowrap; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.table-toggle { margin-top: 14px; }
+.report-table td:first-child { font-weight: 500; }
+.pie-wrap > p { flex-basis: 100%; margin: 0; }

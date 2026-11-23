@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, errText, money } from "../api";
+import Reports from "./Reports";
 import { StaffShell } from "./Staff";
 
 type FundRow = {
@@ -66,9 +67,15 @@ export default function Admin() {
       .catch((e) => setErr(errText(e)));
   useEffect(() => { load(); }, []);
 
+  const [tab, setTab] = useState<"manage" | "reports">("manage");
   return (
-    <StaffShell title="Admin" subtitle="Fund rules and audit log">
+    <StaffShell title="Admin" subtitle="Accounts, fund rules, reports and audit log">
       {err && <p className="error">{err}</p>}
+      <div className="tabs" role="tablist">
+        <button role="tab" aria-selected={tab === "manage"} onClick={() => setTab("manage")}>Manage</button>
+        <button role="tab" aria-selected={tab === "reports"} onClick={() => setTab("reports")}>Reports (all organizations)</button>
+      </div>
+      {tab === "reports" ? <Reports /> : <>
 
       <Accounts />
 
@@ -128,6 +135,7 @@ export default function Admin() {
           </tbody>
         </table>
       </div>
+      </>}
     </StaffShell>
   );
 }
