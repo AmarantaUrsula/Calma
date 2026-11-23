@@ -232,7 +232,7 @@ export default function FundRules({ view, onSaved, base = "/api/fund/rules" }: {
           <>
             <h2>You're changing</h2>
             <ul className="change-list">
-              {changes.map((c) => <li key={c.k}><strong>{LABELS[c.k]}:</strong> <span className="muted">{c.from}</span> → <span className="pink">{c.to}</span></li>)}
+              {changes.map((c) => <li key={c.k}><strong>{LABELS[c.k]}:</strong> <span className="muted">{c.from}</span> → <span className="accent">{c.to}</span></li>)}
             </ul>
           </>
         )}

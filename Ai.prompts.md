@@ -289,3 +289,19 @@ Log of the prompts typed while building Calma (originally called Ataraxia), a we
 - Stopped both servers, renamed the folder, and updated the folder name in the workspace `.claude/launch.json`, `README.md` setup commands, the comment in `backend/main.py`, and Claude's memory notes. Historical mentions ("formerly Ataraxia") stay in `DESIGN.md` and earlier log entries.
 - Restarted both servers from `calma/`. Checked: the app loads at http://localhost:5178, localhost:8020 redirects to it, the API works through the app, the OpenAI key still loads from the workspace `.env`, and all 52 tests pass. Removed a leftover local production build (ignored by Git) so 8020 keeps redirecting to the live app.
 - Git history moved with the folder and is still connected to GitHub. Committed and pushed the README, comment and log updates.
+
+---
+
+## Prompt 23 — 2026-11-23
+
+> Ok let's refine this a little. Can the color palettes of the sites be more muted blues, earthy greens, and warm browns to reflect "calma"? I am just wondering if the hot pink recalls a teachers correcting pen to a nervous person.
+
+**Outcome:** Switched every screen from hot pink on near-black to a **calm, warm palette**:
+- **Background and text:** warm linen background (`#f4efe6`) with cream cards; deep slate text and warm gray secondary text.
+- **Muted slate blue** (`#3e6681`) for buttons, links and selected states.
+- **Sage green** for the Calma name (`#4b6b4e`) and for "approved" (`#44684a`).
+- **Warm brown** (`#7b5236`) for section headings.
+- **Ochre** (`#82561c`) for "waiting".
+- **Terracotta** (`#a3472e`) instead of alarm red for errors.
+
+Checked every text/background pair against WCAG AA: all at least 4.5:1. Two colors (green and ochre on the light badge background) first came in at 4.3–4.4, so I darkened them. The colors are defined once at the top of `frontend/src/styles.css`. This replaces the course rules' default black-and-pink style, at the user's request; noted as decision 13 in `DESIGN.md`. Checked in the browser on the patient screens (phone size) and the clinic portal (desktop). Also fixed "1 nights / 1 days" wording in case details.

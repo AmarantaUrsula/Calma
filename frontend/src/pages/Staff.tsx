@@ -112,7 +112,8 @@ export { money };
 // Plain-English rows for a patient's answers (staff views). Only keys present are shown.
 export function answerRows(a: Record<string, unknown>): [string, string][] {
   const yn = (v: unknown) => (v == null ? "—" : v ? "Yes" : "No");
-  const n = (v: unknown, unit: string) => (v == null ? "—" : `${v}${Number(v) >= 3 && unit !== "mi" ? "+" : ""} ${unit}`);
+  const n = (v: unknown, unit: string) =>
+    v == null ? "—" : `${v}${Number(v) >= 3 ? "+" : ""} ${Number(v) === 1 ? unit.replace(/s$/, "") : unit}`;
   const rows: [string, string, unknown][] = [
     ["Lives in", String(a.state ?? "—"), a.state],
     ["Getting care in", String(a.care_state ?? "—"), a.care_state],

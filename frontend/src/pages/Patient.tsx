@@ -437,7 +437,7 @@ function Results({ t, view, lang, onRefresh }: { t: Strings; view: View; lang: L
       {proc.length > 0 && <><h2>{t.visitHelpTitle}</h2><List items={proc} /></>}
       <dl className="totals">
         <div><dt>{t.visitCost}</dt><dd>{money(view.procedure_cost)}</dd></div>
-        <div><dt>{t.helpApproved}</dt><dd className="pink">− {money(view.approved_total)}</dd></div>
+        <div><dt>{t.helpApproved}</dt><dd className="accent">− {money(view.approved_total)}</dd></div>
         {view.pending_total > 0 && <div><dt>{t.helpWaiting}</dt><dd className="muted">{money(view.pending_total)}</dd></div>}
         <div className="owe"><dt>{t.youMayOwe}</dt><dd>{money(view.you_may_owe)}</dd></div>
       </dl>
