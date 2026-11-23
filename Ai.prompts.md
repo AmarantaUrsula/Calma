@@ -636,3 +636,11 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
   - **OpenAI `gpt-5.6-luna`:** $0.20 per million input tokens and $1.20 per million output tokens (OpenAI model page; prices cut about 80% on July 30, 2026).
   - **Visuals:** the user's diagram is `design-flowchart.webp`. No Calma screenshots were found, so they'd need to be taken.
 - **Security flag raised:** "Try Calma.docx", committed to the public GitHub repo, contains the live Render link and the live admin password. Recommended changing `CALMA_DEMO_PASSWORD` on Render and removing the file from GitHub. No action taken without the user's OK.
+
+---
+
+## Prompt 46 — 2026-11-23
+
+> Yes, remove it
+
+**Outcome:** Removed "Try Calma.docx" from the GitHub repo. The user's copy in the workspace folder (`AI for managers/Try Calma.docx`) is untouched. Added a `.gitignore` rule so filled-in demo guides aren't committed again. The file still exists in the repo's history, so the leaked admin password must be changed on Render (`CALMA_DEMO_PASSWORD`, then redeploy). Fully erasing it from history would mean rewriting the repo's history, offered as an option but not done.
