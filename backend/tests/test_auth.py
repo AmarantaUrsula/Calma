@@ -174,3 +174,12 @@ def test_deployment_requires_its_own_demo_password(tmp_path, monkeypatch):
         monkeypatch.delenv("CALMA_DEMO_PASSWORD")
         monkeypatch.delenv("CALMA_REQUIRE_DEMO_PASSWORD")
         importlib.reload(seed_mod)
+
+
+def test_demo_password_messages_name_the_actual_problem(monkeypatch):
+    from backend import seed as seed_mod
+    monkeypatch.setenv("CALMA_REQUIRE_DEMO_PASSWORD", "1")
+    for value, words in (("", "not set"), (seed_mod.LOCAL_DEMO_PASSWORD, "public default"), ("short", "at least 10")):
+        monkeypatch.setenv("CALMA_DEMO_PASSWORD", value)
+        with pytest.raises(seed_mod.MissingDemoPassword, match=words):
+            seed_mod.check_demo_password()

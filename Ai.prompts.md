@@ -529,3 +529,23 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 > *(Pasted the Render deploy log.)* The Docker build succeeded (all steps cached). The deploy then failed at startup: `backend.seed.MissingDemoPassword: Set CALMA_DEMO_PASSWORD in the host's environment settings (not the public default) before loading demo data.` … `Application startup failed. Exiting.` … `Exited with status 3`.
 
 **Outcome:** Confirmed the cause: `CALMA_DEMO_PASSWORD` isn't set in Render, so the safety check stops startup. The build itself is fine. Gave the fix: Render → calma service → Environment → add `CALMA_DEMO_PASSWORD` (10+ characters, not the README default) → Save and redeploy. Made the error message spell out those exact steps. 78 tests pass.
+
+---
+
+## Prompt 37 — 2026-11-23
+
+> it still did not deploy
+
+**Outcome:** Can't see Render from here, so I asked for the newest deploy log and listed what each likely message means and how to fix it: password still missing (not saved, wrong service, or the deploy started before saving), password too short or the public default, a health check timeout, or a new error. No code changes.
+
+---
+
+## Prompt 38 — 2026-11-23
+
+> I'll paste it
+
+**Outcome:** Waiting for the user to paste the newest Render deploy log.
+
+*(Pasted the new deploy log:)* `backend.seed.MissingDemoPassword: CALMA_DEMO_PASSWORD must be at least 10 characters. Change it under this service > Environment, then redeploy.` … `Application startup failed. Exiting.`
+
+**Outcome:** Progress: Render now has `CALMA_DEMO_PASSWORD`, but its value is **shorter than 10 characters**, so startup stops. Fix: change the value under the calma service → Environment to something 10+ characters (a short phrase), save, redeploy. Also split the error messages so each names its real problem: "not set", "set to the public README default" (previously also reported as "not set"), and "at least 10 characters". 1 new test; 79 pass.

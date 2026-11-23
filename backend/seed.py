@@ -106,12 +106,16 @@ class MissingDemoPassword(RuntimeError):
 def check_demo_password() -> None:
     if os.environ.get("CALMA_REQUIRE_DEMO_PASSWORD") == "1":
         pw = os.environ.get("CALMA_DEMO_PASSWORD", "")
-        if not pw or pw == LOCAL_DEMO_PASSWORD:
+        if not pw:
             raise MissingDemoPassword(
                 "CALMA_DEMO_PASSWORD is not set. On Render: open this service > Environment > Add "
                 "Environment Variable, key CALMA_DEMO_PASSWORD, a password of at least 10 characters that "
                 "isn't the public README default. Save, then redeploy. (This keeps the demo accounts private "
                 "because the GitHub repo is public.)")
+        if pw == LOCAL_DEMO_PASSWORD:
+            raise MissingDemoPassword(
+                "CALMA_DEMO_PASSWORD is set to the public default from the README, which anyone can read on "
+                "GitHub. Choose a different password under this service > Environment, then redeploy.")
         if len(pw) < 10:
             raise MissingDemoPassword("CALMA_DEMO_PASSWORD must be at least 10 characters. Change it under "
                                       "this service > Environment, then redeploy.")
