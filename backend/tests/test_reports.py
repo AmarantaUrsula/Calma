@@ -139,4 +139,17 @@ def test_ai_errors_explain_the_cause(client, monkeypatch, status, words):
     monkeypatch.setattr(main, "model_for_reports", lambda: Broken())
     r = c.post("/api/reports/ask", headers=h(c, 8), json={"request": "paid out by fund"})
     assert r.status_code == 502 and words in r.json()["detail"]
-    assert "sk-" not in r.json()["detail"]  # never echo key fragments back to the browser
+    assert "sk-abc" not in r.json()["detail"] and "xyz" not in r.json()["detail"]  # never echo key fragments to the browser
+
+
+@pytest.mark.parametrize("raw", ["sk-abc123", "  sk-abc123\n", '"sk-abc123"', "'sk-abc123'", "OPENAI_API_KEY=sk-abc123", "OPENAI_API_KEY = 'sk-abc123' "])
+def test_key_copy_paste_mistakes_are_forgiven(raw):
+    from backend.llm import clean_key
+    assert clean_key(raw) == "sk-abc123"
+
+
+def test_restricted_key_gets_its_own_message():
+    from pydantic_ai.exceptions import ModelHTTPError
+    from backend.llm import explain_ai_error
+    msg = explain_ai_error(ModelHTTPError(401, "gpt-5.6-luna", {"message": "You have insufficient permissions for this operation. Missing scopes: model.request"}))
+    assert "restricted" in msg

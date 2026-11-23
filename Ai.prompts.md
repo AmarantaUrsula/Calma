@@ -588,3 +588,16 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 > People will be testing this on their own computers - does that mean we should change the readme file to have the password that works on the render hosted version? or no?
 
 **Outcome:** Advised no. The README is on a public GitHub repo, so the Render password there would be public: anyone could log in as admin, see and change the demo, approve accounts, and spend OpenAI credits with "Check now" or the Report Builder. Colleagues "on their own computers" just open the Render link in a browser and never use the README. Share the password privately (email or message, or a copy of the guide that isn't committed). The README's local password only matters for someone who downloads and runs the code themselves. No changes made.
+
+---
+
+## Prompt 43 — 2026-11-23
+
+> I updated the API key in environments and still got this error The report helper couldn't run: OpenAI rejected the API key. Check OPENAI_API_KEY in the host's environment settings (no extra spaces, and not a key that was deleted or replaced). You can still use the controls below. when I put this prompt pie chart of money paid out in the past 6 months by fund and clinic
+
+**Outcome:** The same request works locally with the local key (fund, then clinic, from May 23 to Nov 23). The AI correctly switched to a bar chart, since a pie can only show one grouping, and said so. So OpenAI is rejecting the specific key in Render (HTTP 401).
+- **Copy-paste forgiveness:** Calma now cleans the key setting of spaces and line breaks, surrounding quotes, and a pasted `OPENAI_API_KEY=` prefix.
+- **Restricted keys:** a key restricted from calling models ("insufficient permissions / missing scopes") now gets its own message.
+- **Better 401 message:** it points to the Render log line "AI request failed", where OpenAI's masked version of the received key (first and last characters) can be compared with the real key.
+- 91 tests pass (7 new).
+- **Steps for the user:** redeploy, retry; if it still fails, check Render Logs for "AI request failed" and compare the masked key, then check that the key is unrestricted, in the right project and not deleted, and that the account has credit.
