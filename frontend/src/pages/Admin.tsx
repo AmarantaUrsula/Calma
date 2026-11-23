@@ -79,6 +79,8 @@ export default function Admin() {
 
       <Accounts />
 
+      <AiUsage />
+
       {proposals.map((p) => <Review key={p.id} p={p} onDone={() => { setUpdating(null); load(); }} />)}
 
       {updating && !proposals.some((p) => p.fund_id === updating.id) && (
@@ -399,6 +401,44 @@ function Accounts() {
               </tr>
             ))}
           </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+type UsageAgg = { calls: number; input_tokens: number; cached_tokens: number; output_tokens: number; cost_usd: number };
+type Usage = { today: UsageAgg; month: UsageAgg; all_time: UsageAgg;
+  by_kind: { kind: string; calls: number; avg_input: number; avg_cached: number; avg_output: number; avg_cost: number }[];
+  limits: { daily_calls: number; per_user_hourly: number } };
+const KIND: Record<string, string> = { rules_extractor: "Fund rules extractor", report_builder: "Report Builder" };
+
+function AiUsage() {
+  const [u, setU] = useState<Usage | null>(null);
+  useEffect(() => { api<Usage>("/api/admin/ai-usage").then(setU).catch(() => {}); }, []);
+  if (!u) return null;
+  const n = (x: number) => x.toLocaleString("en-US");
+  return (
+    <div className="card">
+      <div className="pledge-head">
+        <h2>AI usage and spending limits</h2>
+        <span className="muted small">Every AI call is checked against these limits first and recorded with its real token counts.
+          Limits: {u.limits.daily_calls} calls per day for the whole site, {u.limits.per_user_hourly} per person per hour.</span>
+      </div>
+      <div className="stat-row">
+        {([["Today", u.today], ["This month", u.month], ["All time", u.all_time]] as [string, UsageAgg][]).map(([k, a]) => (
+          <div className="stat" key={k}><div className="muted small">{k}</div>
+            <div className="stat-num">${a.cost_usd.toFixed(4)}</div>
+            <div className="small muted">{n(a.calls)} calls · {n(a.input_tokens)} in ({n(a.cached_tokens)} cached) · {n(a.output_tokens)} out</div></div>
+        ))}
+      </div>
+      {u.by_kind.length > 0 && (
+        <table className="grid compact small">
+          <thead><tr><th>Agent</th><th className="num">Calls</th><th className="num">Avg input</th><th className="num">Avg cached</th><th className="num">Avg output</th><th className="num">Avg cost</th></tr></thead>
+          <tbody>{u.by_kind.map((k) => (
+            <tr key={k.kind}><td>{KIND[k.kind] ?? k.kind}</td><td className="num">{k.calls}</td><td className="num">{n(k.avg_input)}</td>
+              <td className="num">{n(k.avg_cached)}</td><td className="num">{n(k.avg_output)}</td><td className="num">${k.avg_cost.toFixed(5)}</td></tr>
+          ))}</tbody>
         </table>
       )}
     </div>

@@ -860,7 +860,7 @@ async def admin_extract(fund_id: int, body: ExtractBody, user: User = Depends(re
         raise HTTPException(404, "Fund not found.")
     try:
         criteria_id = await create_proposal(db, fund_id, body.text, body.source_url, f"user:{user.id}",
-                                            model_for_extraction())
+                                            model_for_extraction(), user_id=user.id)
     except Exception as e:  # model/network errors: tell the admin, never apply anything
         audit(db, f"user:{user.id}", "rules_extract_failed", detail={"fund_id": fund_id, "error": type(e).__name__})
         raise HTTPException(502, f"The AI helper couldn't read this text: {llm.explain_ai_error(e)} Nothing was changed.")
@@ -1321,7 +1321,7 @@ def admin_user_action(user_id: int, action: Literal["approve", "reject", "disabl
 
 from fastapi.responses import Response  # noqa: E402
 
-from . import report_agent, reports  # noqa: E402
+from . import ai_budget, report_agent, reports  # noqa: E402
 
 # Tests swap this for a fake model so no real AI call is made.
 model_for_reports = llm.get_model
@@ -1404,7 +1404,13 @@ async def report_ask(body: AskBody, user: User = Depends(current_user), db: sqli
     """Report Builder: plain English -> settings (AI) -> numbers (report engine, no AI)."""
     _report_user(user)
     try:
-        spec, notes = await report_agent.build_spec(body.request, user.role, clock.today(), model_for_reports())
+        ai_budget.check(db, user.id)
+    except ai_budget.BudgetExceeded as e:
+        raise HTTPException(429, str(e))
+    try:
+        spec, notes = await report_agent.build_spec(
+            body.request, user.role, clock.today(), model_for_reports(),
+            on_usage=lambda u: ai_budget.record(db, user.id, "report_builder", llm.model_name(), u))
     except Exception as e:
         raise HTTPException(502, f"The report helper couldn't run: {llm.explain_ai_error(e)} You can still use the controls below.")
     p = ReportParams(measure=spec.measure, date_basis=spec.date_basis, start=spec.start, end=spec.end, group_by=spec.group_by)
@@ -1412,6 +1418,13 @@ async def report_ask(body: AskBody, user: User = Depends(current_user), db: sqli
     audit(db, f"user:{user.id}", "report_builder_used", detail={"group_by": p.group_by, "view": spec.view})
     return {"spec": {**p.model_dump(mode="json"), "view": spec.view, "chart_value": spec.chart_value, "title": spec.title},
             "notes": notes, "result": {**result, "group_by": p.group_by, "labels": [reports.DIMENSIONS[d][0] for d in p.group_by]}}
+
+
+# ---------- admin: AI usage and spending ----------
+
+@app.get("/api/admin/ai-usage")
+def admin_ai_usage(user: User = Depends(require("admin")), db: sqlite3.Connection = Depends(get_db)) -> dict:
+    return ai_budget.summary(db)
 
 
 # ---------- the web app (production only; must be the last route) ----------

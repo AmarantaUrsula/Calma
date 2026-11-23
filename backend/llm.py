@@ -66,6 +66,9 @@ def explain_ai_error(e: Exception) -> str:
     from pydantic_ai.exceptions import ModelHTTPError
 
     log = logging.getLogger("calma.ai")
+    if type(e).__name__ == "BudgetExceeded":
+        log.warning("AI spending limit: %s", e)
+        return str(e)
     if isinstance(e, RuntimeError) and "API_KEY" in str(e):
         log.error("AI not configured: %s", e)
         return "The AI isn't set up on this server: OPENAI_API_KEY is missing. Add it in the host's environment settings."

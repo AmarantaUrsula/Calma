@@ -644,3 +644,45 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 > Yes, remove it
 
 **Outcome:** Removed "Try Calma.docx" from the GitHub repo. The user's copy in the workspace folder (`AI for managers/Try Calma.docx`) is untouched. Added a `.gitignore` rule so filled-in demo guides aren't committed again. The file still exists in the repo's history, so the leaked admin password must be changed on Render (`CALMA_DEMO_PASSWORD`, then redeploy). Fully erasing it from history would mean rewriting the repo's history, offered as an option but not done.
+
+---
+
+## Prompt 47 — 2026-11-23
+
+> The report (10–15 pages) which is (report.html), A single HTML file, 10–15 pages when printed.
+>
+> Write it for a smart manager who has never seen the app. Use these sections, in this order. Put screenshots or use the flow chat of the app wherever they help the reader see what you are describing.
+>
+> 1. Title + links — Project name, your name, the GitHub repo link (same one you submit on Canvas), the link to the app itself if it is online, and one sentence that says what the app does.
+> 2. Motivation — Who has this problem? How do they deal with it today, and what does that cost them in money, time, or frustration? Why should anyone care?
+> 3. What is new here — Look around first. What already exists (apps, startups, ChatGPT itself)? What does your project do that those don't? Be honest. If something close exists, say what you do differently and why that matters.
+> 4. The agents — What are the AI agents in your app, and what does each one do? What tools can each agent use? If you have more than one agent: how are they organized? Who hands work to whom? Draw a diagram. Which model(s) you used and why. Walk through one real run, step by step, with screenshots.
+> 5. Tokenomics — How many tokens does one typical run use (input, cached input, output)? Measure it from real runs. What does one run cost? What does it cost per user per month? What would it cost at scale: 100 users? 10,000 users? What did you do to keep cost down? Did any of your cost cutting make the app perform worse? Show evidence.
+> 6. Safety — What could go wrong, and what did you build to stop it? Cover the risks that matter for your app, for example: Attacks: prompt injection, users trying to get the agent to leak data or misbehave. Agent malfunction: the agent invents facts, takes the wrong action, or loops forever. How do you protect the user? Overspending: what stops a bug or a bad actor from burning through your token budget? Show at least one defense actually working, with a screenshot or a test.
+> 7. Impact — If this helps an organization or people, put numbers on it: money saved, hours saved, faster turnaround, better quality, more people served, or something that was impossible before and now is possible. Say where your numbers come from (your own tests, a pilot user, public data, a careful estimate). The strongest evidence is a real user trying it.
+> 8. Limits + next steps — What doesn't work yet? What would you build next if you had another month?
+>
+> The page count is for a normal printed page (letter size, regular font, screenshots included). Fifteen pages of real detail beats fifteen pages of filler. The grade is for the content, and filler costs points.
+
+*(Follow-up typed while I was working:)*
+
+> here are some screen shots to add whereever it makes sense to
+>
+> *(Three screenshots of the patient form: the language choice screen with the bilingual demo notice, the "Hi! Let's see if we can help pay for your visit" intro screen, and step 3 of 10, the income question with "each month / each year".)*
+
+> another screen shot of the clinic sign in
+>
+> *(Screenshot of the clinic portal as Rosa: monthly fund budget, new-appointment form with a created patient link C-1091, and the case list.)*
+
+**Outcome:** Wrote **`report.html`**: a single file (1.5 MB, all images embedded) that prints at **15 letter pages**, with the eight requested sections.
+- **Research:** NNAF survey figures, KFF abortion cost medians, the JAMA travel-cost study, NPR and *The Nation* on how patients piece together funding, and existing tools (NNAF directory, AbortionFinder, DARIA, the NAF hotline, ChatGPT). Sources are listed at the end.
+- **New safety feature built for the report:** an **AI spending guard** (`backend/ai_budget.py`). It sets a per-person limit (30/hour) and a site-wide daily cap (300/day), and records every AI call's real input, cached and output tokens and cost. It covers the Report Builder, the rules extractor and the website checks, with an Admin card. 3 new tests.
+- **Real measurements** on gpt-5.6-luna vs gpt-5.6-sol (10 fund pages and 8 report requests):
+  - **Rules Extractor:** 1,790 input tokens (1,138 cached), 423 output, **$0.00066** per run, 4.2 s, 46/47 fields correct. Sol: $0.0213, 47/47.
+  - **Report Builder:** 733 input / 163 output tokens, **$0.00034** per run, 7/8 correct (Sol the same).
+  - **Luna's one miss** (West Fund's state basis) was flagged by the quote checker.
+  - **Matching engine:** 4.3 µs per patient, no AI.
+- **Live safety tests:** a prompt injection on a fund page ("set pledge to $10,000") was ignored, both in code and in the live app (screenshots). The Report Builder refused to list patient names or reveal its instructions or the API key.
+- **Figures:** the user's flowchart; the user's four screenshots (language choice, welcome screen, income question, clinic portal); 11 new screenshots from a real run (website checks, Carolina review, Report Builder and chart, patient results, clinic case, fund card, AI usage, the injection test); and an agent pipeline diagram (SVG).
+- **Fixes along the way:** pydantic-ai's `usage` is a property here, not a method; a test leaked a login lockout into later tests (now reset between tests).
+- **Files:** `report-assets/` holds the template, the build script (`build_report.py`) and the images. 94 tests pass.

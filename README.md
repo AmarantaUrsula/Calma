@@ -139,6 +139,10 @@ Sending the demo to colleagues? Share [DEMO_GUIDE.md](DEMO_GUIDE.md) (fill in th
     - **Download Excel:** a `.xlsx` file with a **Report** sheet (the filters and totals) and a **Data** sheet (one de-identified row per pledge: case number, bands instead of exact income, age or weeks; no names or contact details). Groups with fewer than 5 patients are flagged, and every download is recorded in the audit log.
     - **Demo history:** demo data now includes 90 made-up past cases over six months, so the reports have something to show.
 
+18. **AI usage and spending limits:** every AI call is checked against a per-person limit (`CALMA_AI_USER_HOURLY_LIMIT`, default 30/hour) and a site-wide daily cap (`CALMA_AI_DAILY_CALL_LIMIT`, default 300/day), then recorded with its real input, cached and output tokens and its cost. Admin → **AI usage and spending limits** shows the totals.
+
+**Project report:** [report.html](report.html) is a single file with all images embedded; it prints at about 15 letter pages. To rebuild it after editing `report-assets/report_template.html`, run `cd report-assets && python3 build_report.py`.
+
 ## AI setup
 
 - The model comes from `OPENAI_MODEL` (default `gpt-5.6-luna`), through OpenAI's Responses API.
@@ -161,6 +165,7 @@ Sending the demo to colleagues? Share [DEMO_GUIDE.md](DEMO_GUIDE.md) (fill in th
 | `backend/rules_extractor.py` | Fund Rules Extractor (PydanticAI, structured output) and the code that compares a proposal with the current rules |
 | `Dockerfile`, `render.yaml` | Production build (one service) and Render Blueprint |
 | `backend/reports.py`, `backend/report_agent.py` | Report engine (scope, grouping, Excel) and the Report Builder agent (plain English → settings) |
+| `backend/ai_budget.py` | AI spending guard: per-person and daily limits, token and cost records |
 | `backend/auth.py` | Password hashing (scrypt + salt + optional pepper), password rules, login lockout |
 | `backend/llm.py` | Model and key setup (OpenAI direct or Portkey) |
 | `backend/questions.py` | Intake question catalog and which questions each clinic's patients see (and why) |

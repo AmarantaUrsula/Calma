@@ -241,6 +241,8 @@ def init_schema(conn: sqlite3.Connection) -> None:
             if name not in have:
                 conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {decl}")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email) WHERE email IS NOT NULL")
+    from .ai_budget import ensure_table
+    ensure_table(conn)
 
 
 def audit(conn: sqlite3.Connection, actor: str, action: str, case_id: int | None = None, detail: dict | None = None) -> None:

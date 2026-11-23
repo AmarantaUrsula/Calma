@@ -232,8 +232,12 @@ async def check_fund(db: sqlite3.Connection, fund_id: int, model: Any, trigger: 
     if pending:
         return done("skipped_pending_review", f"{what}, but a suggestion is already waiting for review. Will check again next time.", text=text)
 
+    from .ai_budget import BudgetExceeded
     try:
-        criteria_id = await create_proposal(db, fund_id, text, url, trigger, model)
+        criteria_id = await create_proposal(db, fund_id, text, url, trigger, model,
+                                            user_id=int(trigger.split(":")[1]) if trigger.startswith("user:") else None)
+    except BudgetExceeded as e:
+        return done("error", f"{what}, but the AI spending limit was reached: {e} Will retry next time.", text=text)
     except Exception as e:
         from .llm import explain_ai_error
         return done("error", f"{what}, but the AI helper failed: {explain_ai_error(e)} Will retry next time.", text=text)

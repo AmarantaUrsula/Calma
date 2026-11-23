@@ -114,13 +114,16 @@ extractor = Agent(
 )
 
 
-async def extract(text: str, model: Any) -> ExtractedCriteria:
+async def extract(text: str, model: Any, on_usage: Any = None) -> ExtractedCriteria:
     text = text.strip()[:MAX_SOURCE_CHARS]
     result = await extractor.run(
         f"<fund_policy_text>\n{text}\n</fund_policy_text>",
         model=model,
         usage_limits=UsageLimits(request_limit=4),
     )
+    if on_usage:
+        u = result.usage
+        on_usage(u() if callable(u) else u)
     return result.output
 
 

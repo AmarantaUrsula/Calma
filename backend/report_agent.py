@@ -89,11 +89,14 @@ def clean_spec(spec: ReportSpec, role: str) -> tuple[ReportSpec, list[str]]:
     return spec.model_copy(update={"group_by": by, "view": view, "start": start, "end": end}), notes
 
 
-async def build_spec(request: str, role: str, today: date, model: Any) -> tuple[ReportSpec, list[str]]:
+async def build_spec(request: str, role: str, today: date, model: Any, on_usage: Any = None) -> tuple[ReportSpec, list[str]]:
     result = await report_agent.run(
         f"<request>\n{request.strip()[:500]}\n</request>",
         model=model, instructions=_instructions(role, today), usage_limits=UsageLimits(request_limit=3),
     )
+    if on_usage:
+        u = result.usage
+        on_usage(u() if callable(u) else u)
     spec, notes = clean_spec(result.output, role)
     if spec.note:
         notes.insert(0, spec.note)

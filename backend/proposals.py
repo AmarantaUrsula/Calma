@@ -90,13 +90,17 @@ def current_rule_dict(db: sqlite3.Connection, fund_id: int) -> dict:
 
 
 async def create_proposal(db: sqlite3.Connection, fund_id: int, text: str, source_url: str | None,
-                          actor: str, model: Any) -> int:
+                          actor: str, model: Any, user_id: int | None = None) -> int:
     """Run the extractor and store a 'proposed' rule version. Returns its id.
 
     Raises whatever the model raises; the caller decides how to report it.
     Nothing here touches the live (approved) rules.
     """
-    ex = await rules_extractor.extract(text, model)
+    from . import ai_budget
+
+    ai_budget.check(db, user_id)  # spending limits before any AI call
+    ex = await rules_extractor.extract(
+        text, model, on_usage=lambda u: ai_budget.record(db, user_id, "rules_extractor", llm.model_name(), u))
     current = current_rule_dict(db, fund_id)
     proposed, evidence = rules_extractor.build_proposal(current, ex, text)
     # One open proposal per fund: a new one replaces the old.
