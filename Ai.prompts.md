@@ -773,6 +773,14 @@ Suggested confirming with clinics which identifier they'd use.
 > * the reason why clinic funds asks about judicial bypass and homelessness is because those two bypass our income guideline rules. So if someone says they fall into any of those two categories they can automatically get beyond the 50% copay eligibility.
 > * people who have Medicaid in states that cover abortion are not eligible for clinics funds. So if a state's Medicaid policy cover abortion care (find that info here: https://www.guttmacher.org/state-policy/explore/state-insurance-coverage-abortion-under-medicaid) they get zero dollars covered under clinics based funds. Can we add that into the determination code?
 
-**Outcome:** Added both rules to the determination code (plain Python, no AI). (1) **Income exceptions:** a fund can list exception groups (unhoused, minors seeking a judicial bypass). Those patients skip the income limit and get a separate exception pledge; demo clinic funds use 100% of cost up to $600 (Mesa) / $500 (Prairie), editable in a new **Exceptions** box in the rules editor. (2) **Medicaid:** new optional question "Do you have Medicaid?" (English/Spanish). Clinic funds give $0 when the patient has Medicaid in one of the 21 states whose Medicaid covers abortion (Guttmacher, as of July 16, 2026, in `backend/medicaid.py`); "not sure" stays eligible with a "check enrollment" note. Partner funds are unaffected. Tested end to end: a New Mexico patient with Medicaid got no Mesa pledge but still matched Desert Bloom and Enchanted Circle. 99 tests pass. Updated README, DESIGN (decision 20), DEMO_GUIDE. Open question for the tester: what exact amount "beyond the 50%" should be.
+**Outcome:** Added both rules to the determination code (plain Python, no AI). (1) **Income exceptions:** a fund can list exception groups (unhoused, minors seeking a judicial bypass). Those patients skip the income limit and get a separate exception pledge; demo clinic funds use 100% of cost up to $600 (Mesa) / $500 (Prairie), editable in a new **Exceptions** box in the rules editor. (2) **Medicaid:** new optional question "Do you have Medicaid?" (English/Spanish). Clinic funds give $0 when the patient has Medicaid in one of the 21 states whose Medicaid covers abortion (Guttmacher, as of July 16, 2026, in `backend/medicaid.py`); "not sure" stays eligible with a "check enrollment" note. Partner funds are unaffected. Tested end to end: a New Mexico patient with Medicaid got no Mesa pledge but still matched Desert Bloom and Enchanted Circle. 99 tests pass. Updated README, DESIGN (decision 20), DEMO_GUIDE. 
+
+---
+
+## Prompt 55 — 2026-11-24
+
+> Keep 100% up to cap
+
+**Outcome:** Kept the exception amount as is: unhoused patients and minors seeking a judicial bypass get 100% of the cost from the clinic fund, up to $600 (Mesa) / $500 (Prairie). Each clinic can still change it in its rules editor. No code change; DESIGN decision 20 updated to say it's decided.
 
 ---
