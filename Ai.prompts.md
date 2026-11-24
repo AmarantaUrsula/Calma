@@ -836,3 +836,11 @@ Suggested confirming with clinics which identifier they'd use.
 **Outcome:** Committed and pushed report.pdf (15 pages) to the repo, next to report.html. README notes it's a print of report.html and should be re-exported after report edits.
 
 ---
+
+## Prompt 62 — 2026-11-24
+
+> So can I submit an html of the report and slides to the professor that he can view without it being hosted on a website?
+
+**Outcome:** Yes, both open by double-clicking, with no hosting. Checked what each file loads from the web: report.html loads nothing (images and diagrams are inside the file), so it works even offline. slides.html has its screenshots inside, but loads reveal.js and the font from a CDN (as the professor's instructions suggested), so it needs an internet connection to show as slides. No changes besides this log entry.
+
+---
