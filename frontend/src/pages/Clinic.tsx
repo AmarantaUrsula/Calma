@@ -14,6 +14,7 @@ type Case = {
   id: number; case_ref: string; appointment_date: string; procedure_cost: number; status: string;
   language: string; contact_method: string; patient_path: string | null; pledges: Pledge[];
   approved_total: number; patient_owes: number; practical_approved: number;
+  clinic_ref: string | null; clinic_status: ClinicStatus; overdue: boolean;
   screening?: Record<string, unknown> & { monthly_income: number; income_fpl_pct: number };
   contact?: { first_name: string | null; last_name: string | null; phone: string | null; email: string | null; notify_pref: string | null } | null;
   not_matched?: { fund_name: string; reasons: string[] }[];
@@ -30,6 +31,8 @@ export default function Clinic() {
   const [cases, setCases] = useState<Case[]>([]);
   const [owed, setOwed] = useState<Owed[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
+  const [filter, setFilter] = useState<CaseFilter>("all");
+  const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"cases" | "reimb" | "rules" | "questions" | "partners" | "reports">("cases");
   const [partners, setPartners] = useState<Partnership[]>([]);
   const [fundRules, setFundRules] = useState<RulesView[]>([]);
@@ -102,27 +105,42 @@ export default function Clinic() {
       ))}
 
       {tab === "cases" && (
+        <>
+        <div className="case-filters">
+          <div className="lang-toggle filter-tabs" role="group" aria-label="Show cases">
+            {CASE_FILTERS.map(([id, label]) => (
+              <button key={id} aria-pressed={filter === id} onClick={() => setFilter(id)}>
+                {label} ({cases.filter((c) => inFilter(c, id)).length})
+              </button>
+            ))}
+          </div>
+          <input className="input case-search" placeholder="Search your reference or case number" value={search}
+            onChange={(e) => setSearch(e.target.value)} aria-label="Search cases" />
+        </div>
         <div className="split">
           <table className="grid">
-            <thead><tr><th>Case</th><th>Visit</th><th>Status</th><th className="num">Cost</th><th className="num">Help approved</th><th className="num">Patient pays</th><th>Pledges</th></tr></thead>
+            <thead><tr><th>Case</th><th>Your ref.</th><th>Visit</th><th>Status</th><th className="num">Cost</th><th className="num">Help approved</th><th className="num">Patient pays</th><th>Pledges</th></tr></thead>
             <tbody>
-              {cases.map((c) => (
+              {cases.filter((c) => inFilter(c, filter) && matchesSearch(c, search)).map((c) => (
                 <tr key={c.id} className={selected === c.id ? "sel" : ""} onClick={() => setSelected(c.id)} tabIndex={0}
                   onKeyDown={(e) => e.key === "Enter" && setSelected(c.id)}>
                   <td className="mono">{c.case_ref}</td>
+                  <td className="small">{c.clinic_ref ?? <span className="muted">—</span>}</td>
                   <td>{c.appointment_date}</td>
-                  <td><Badge status={c.status} /></td>
+                  <td><StatusBadge status={c.clinic_status} overdue={c.overdue} /></td>
                   <td className="num">{money(c.procedure_cost)}</td>
                   <td className="num">{money(c.approved_total)}</td>
                   <td className="num">{c.status === "link_sent" ? "—" : money(c.patient_owes)}</td>
                   <td>{c.pledges.map((p) => <span key={p.id} className={`dot ${p.status}`} title={`${p.fund_name}: ${p.status}`} />)}</td>
                 </tr>
               ))}
-              {!cases.length && <tr><td colSpan={7} className="muted">No cases yet. Book an appointment above.</td></tr>}
+              {!cases.length && <tr><td colSpan={8} className="muted">No cases yet. Book an appointment above.</td></tr>}
+              {cases.length > 0 && !cases.some((c) => inFilter(c, filter) && matchesSearch(c, search)) && <tr><td colSpan={8} className="muted">No cases match.</td></tr>}
             </tbody>
           </table>
           {selected && <CaseDetail id={selected} onChange={load} key={selected + JSON.stringify(cases.find((c) => c.id === selected)?.pledges.map((p) => p.status))} />}
         </div>
+        </>
       )}
 
       {tab === "reimb" && (
@@ -158,13 +176,14 @@ function NewAppointment({ onCreated }: { onCreated: () => void }) {
   const [cost, setCost] = useState(900);
   const [method, setMethod] = useState<"text" | "email">("text");
   const [lang, setLang] = useState<"en" | "es">("en");
+  const [ref, setRef] = useState("");
   const [link, setLink] = useState<{ ref: string; path: string } | null>(null);
   const [err, setErr] = useState("");
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setErr("");
     try {
       const r = await api<{ case_ref: string; patient_path: string }>("/api/clinic/cases", {
-        body: { appointment_date: date, procedure_cost: cost, contact_method: method, language: lang },
+        body: { appointment_date: date, procedure_cost: cost, contact_method: method, language: lang, clinic_ref: ref || null },
       });
       setLink({ ref: r.case_ref, path: r.patient_path });
       onCreated();
@@ -174,6 +193,8 @@ function NewAppointment({ onCreated }: { onCreated: () => void }) {
     <form className="card new-appt" onSubmit={submit}>
       <h2>New appointment → send screening link</h2>
       <div className="form-row">
+        <label title="Your own appointment or chart number. Only your clinic sees it.">Your reference (optional)
+          <input className="input" value={ref} maxLength={60} onChange={(e) => setRef(e.target.value)} placeholder="e.g. appointment #" /></label>
         <label>Visit date<input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required /></label>
         <label>Procedure cost ($)<input className="input" type="number" min={1} value={cost} onChange={(e) => setCost(Number(e.target.value))} required /></label>
         <label>Send by<select className="input" value={method} onChange={(e) => setMethod(e.target.value as "text" | "email")}><option value="text">Text</option><option value="email">Email</option></select></label>
@@ -184,7 +205,7 @@ function NewAppointment({ onCreated }: { onCreated: () => void }) {
       {link && (
         <div className="sent">
           <span className="muted small">Demo: a real version would {method} this to the patient. The message would say only "Answer a few questions before your visit" plus the link, with no mention of abortion.</span>
-          <div><strong>{link.ref}</strong> · <a href={link.path} target="_blank" rel="noreferrer">Open patient link ↗</a></div>
+          <div><strong>{link.ref}</strong>{ref && <> · your ref. <strong>{ref}</strong></>} · <a href={link.path} target="_blank" rel="noreferrer">Open patient link ↗</a></div>
         </div>
       )}
     </form>
@@ -206,6 +227,7 @@ function CaseDetail({ id, onChange }: { id: number; onChange: () => void }) {
   return (
     <div className="card detail">
       <h2>{c.case_ref} · visit {c.appointment_date}</h2>
+      <ClinicRef caseId={c.id} value={c.clinic_ref} onSaved={refresh} />
       {c.status === "link_sent" && (
         <p className="muted">Waiting for the patient to fill out the form. <a href={c.patient_path!} target="_blank" rel="noreferrer">Open patient link ↗</a></p>
       )}
@@ -329,6 +351,63 @@ function IntakeQuestions() {
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+type ClinicStatus = "waiting_patient" | "needs_approval" | "waiting_funds" | "approved" | "visit_completed" | "closed";
+type CaseFilter = "all" | "needs" | "waiting" | "upcoming" | "done";
+const STATUS_LABEL: Record<ClinicStatus, [string, string]> = {
+  waiting_patient: ["Waiting for patient", "link_sent"],
+  needs_approval: ["Needs your approval", "pending"],
+  waiting_funds: ["Waiting on funds", "screened"],
+  approved: ["Approved", "approved"],
+  visit_completed: ["Visit completed", "appointment_done"],
+  closed: ["Closed", "closed"],
+};
+const CASE_FILTERS: [CaseFilter, string][] = [["all", "All"], ["needs", "Needs approval"], ["waiting", "Waiting"], ["upcoming", "Approved"], ["done", "Done"]];
+
+function inFilter(c: { clinic_status: ClinicStatus }, f: CaseFilter): boolean {
+  if (f === "all") return true;
+  if (f === "needs") return c.clinic_status === "needs_approval";
+  if (f === "waiting") return c.clinic_status === "waiting_patient" || c.clinic_status === "waiting_funds";
+  if (f === "upcoming") return c.clinic_status === "approved";
+  return c.clinic_status === "visit_completed" || c.clinic_status === "closed";
+}
+function matchesSearch(c: { case_ref: string; clinic_ref: string | null }, q: string): boolean {
+  const s = q.trim().toLowerCase();
+  return !s || c.case_ref.toLowerCase().includes(s) || (c.clinic_ref ?? "").toLowerCase().includes(s);
+}
+
+function StatusBadge({ status, overdue }: { status: ClinicStatus; overdue: boolean }) {
+  const [label, cls] = STATUS_LABEL[status];
+  return <span className={`badge ${overdue ? "overdue" : cls}`} title={overdue ? "Past the 24-hour decision policy" : ""}>{label}{overdue ? " · overdue" : ""}</span>;
+}
+
+/** The clinic's own appointment/chart number. Clinic-only: never shown to the patient or funds. */
+function ClinicRef({ caseId, value, onSaved }: { caseId: number; value: string | null; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [v, setV] = useState(value ?? "");
+  const [err, setErr] = useState("");
+  const save = async () => {
+    setErr("");
+    try { await api(`/api/clinic/cases/${caseId}/ref`, { method: "PUT", body: { clinic_ref: v } }); setEditing(false); onSaved(); }
+    catch (e) { setErr(errText(e)); }
+  };
+  return (
+    <div className="clinic-ref small">
+      <span className="muted">Your reference:</span>{" "}
+      {editing ? (
+        <span className="decide">
+          <input className="input" value={v} maxLength={60} onChange={(e) => setV(e.target.value)} aria-label="Your reference" autoFocus />
+          <button className="btn small-btn" onClick={save}>Save</button>
+          <button className="btn ghost small-btn" onClick={() => { setV(value ?? ""); setEditing(false); }}>Cancel</button>
+        </span>
+      ) : (
+        <><strong>{value ?? "none"}</strong> <button className="link small" onClick={() => setEditing(true)}>{value ? "edit" : "add"}</button>
+          <span className="muted"> · only your clinic sees this</span></>
+      )}
+      {err && <span className="error"> {err}</span>}
     </div>
   );
 }

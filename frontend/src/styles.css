@@ -296,3 +296,11 @@ h2.sub { margin-top: 14px; }
 .badge.due { color: var(--muted); border-color: var(--line); font-weight: 600; }
 .badge.overdue { color: #fff; background: var(--red); border-color: var(--red); }
 .due-row { flex-basis: 100%; }
+
+/* ---------- clinic case list ---------- */
+.case-filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.filter-tabs { margin-left: 0; flex-wrap: wrap; }
+.filter-tabs button { font-size: 13px; }
+.case-search { min-width: 260px; flex: 1; max-width: 360px; }
+.clinic-ref { margin: -4px 0 10px; }
+.clinic-ref .input { padding: 4px 8px; width: 160px; }

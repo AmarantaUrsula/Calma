@@ -738,3 +738,18 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 3. **An optional "clinic reference" field** (appointment or chart number) entered when creating the link: clinic-only (never shown to patients, funds or the AI), searchable, and in clinic exports. Recommended over asking patients for a name. The existing optional clinic-only contact question (first name) can be a backup for clinics that want it.
 
 Suggested confirming with clinics which identifier they'd use.
+
+---
+
+## Prompt 52 — 2026-11-24
+
+> Yes, build all three
+>
+> *(Context: plain-language case statuses, cases needing approval at the top, and an optional clinic-only reference number.)*
+
+**Outcome:** Built all three tester suggestions.
+1. **Plain case statuses** in the clinic portal: *Waiting for patient · Needs your approval · Waiting on funds · Approved · Visit completed · Closed*, worked out from each case and its pledges. Overdue approvals get a red "· overdue" label.
+2. **Sorting:** overdue cases first, then *Needs your approval*, *Waiting on funds*, *Approved*, *Waiting for patient* (soonest visit first within each), then finished cases (most recent first). New filter tabs (All / Needs approval / Waiting / Approved / Done, with counts) and a search box (your reference or case number).
+3. **"Your reference (optional)"** on the new-appointment form: the clinic's own appointment or chart number. It shows in the case list ("Your ref.") and on the case view, where it can be added or edited. **Clinic-only:** never in fund views, the patient page or AI calls, not written to the audit log, and included only in the clinic's own Excel downloads.
+- 1 new test (statuses, sort order, trimming, editing, another clinic can't edit, hidden from funds and patients, export columns by role); 96 pass. Checked in the browser: creating a link with a reference, sort order, filters, search, and the reference on the case view.
+- Updated README (step 20), DESIGN (decision 19), DEMO_GUIDE, and the report's clinic-portal screenshot and caption (still 15 pages).

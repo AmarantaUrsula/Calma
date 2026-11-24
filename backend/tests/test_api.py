@@ -159,3 +159,44 @@ def test_24_hour_decision_policy(client):
     assert client.get("/api/fund/pledges", headers=sam).json()[0]["overdue"] is False
     statuses = {p["status"] for p in client.get(f"/api/p/{tok}").json()["pledges"]}
     assert "pending" in statuses  # the clinic's own pledge still waits for a person
+
+
+def test_clinic_reference_statuses_and_sorting(client):
+    import io
+    from openpyxl import load_workbook
+    rosa, sam = login(client, 1), login(client, 3)
+    def make(date, ref, screen=True):
+        r = client.post("/api/clinic/cases", headers=rosa, json={"appointment_date": date, "procedure_cost": 900,
+                                                                "contact_method": "text", "clinic_ref": ref}).json()
+        tok = r["patient_path"].split("/")[-1]
+        if screen:
+            client.post(f"/api/p/{tok}/screening", json={"state": "TX", "household_size": 1, "monthly_income": 1000,
+                        "gestational_weeks": 8, "needs_travel": False, "insurance_coverage": "no", "age": 30})
+        return r["case_id"], tok
+    waiting, wtok = make("2026-11-25", "APPT-1", screen=False)
+    needs, ntok = make("2026-11-30", "  APPT-2  ")
+    approved_case, atok = make("2026-11-28", None)
+    # decide everything on approved_case
+    for p in client.get(f"/api/clinic/cases/{approved_case}", headers=rosa).json()["pledges"]:
+        path = f"/api/clinic/pledges/{p['id']}/decide" if p["fund_kind"] == "clinic" else f"/api/fund/pledges/{p['id']}/decide"
+        h = rosa if p["fund_kind"] == "clinic" else login(client, {"Desert Bloom Fund": 3, "Enchanted Circle Care Fund": 9}.get(p["fund_name"], 3))
+        client.post(path, headers=h, json={"decision": "decline"})
+    cases = client.get("/api/clinic/cases", headers=rosa).json()
+    status = {c["id"]: c["clinic_status"] for c in cases}
+    assert status[waiting] == "waiting_patient" and status[needs] == "needs_approval" and status[approved_case] == "approved"
+    assert cases[0]["id"] == needs  # needs approval comes first
+    assert next(c for c in cases if c["id"] == needs)["clinic_ref"] == "APPT-2"  # trimmed
+    # edit the reference later
+    client.put(f"/api/clinic/cases/{approved_case}/ref", headers=rosa, json={"clinic_ref": "APPT-3"})
+    assert client.get(f"/api/clinic/cases/{approved_case}", headers=rosa).json()["clinic_ref"] == "APPT-3"
+    assert client.put(f"/api/clinic/cases/{approved_case}/ref", headers=login(client, 2), json={"clinic_ref": "x"}).status_code == 404
+    # never visible to funds or the patient
+    assert "APPT" not in client.get("/api/fund/pledges", headers=sam).text
+    assert "APPT" not in client.get(f"/api/p/{ntok}").text
+    # clinic exports include it; fund exports don't
+    body = {"measure": "pledged", "date_basis": "approved", "start": "2026-11-01", "end": "2026-11-30", "group_by": []}
+    client.post(f"/api/clinic/pledges/{[p for p in client.get(f'/api/clinic/cases/{needs}', headers=rosa).json()['pledges'] if p['fund_kind']=='clinic'][0]['id']}/decide",
+                headers=rosa, json={"decision": "approve"})
+    for h, expect in ((rosa, True), (sam, False)):
+        wb = load_workbook(io.BytesIO(client.post("/api/reports/export", headers=h, json=body).content))
+        assert ("Clinic reference" in [c.value for c in wb["Data"][1]]) is expect

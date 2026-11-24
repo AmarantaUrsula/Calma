@@ -93,7 +93,7 @@ def fetch_rows(db: sqlite3.Connection, role: str, clinic_id: int | None, fund_id
         SELECT p.id, p.case_id, p.approved_amount, p.status, p.category, p.decided_at, p.paid_at,
                f.name AS fund_name, f.kind AS fund_kind, cl.name AS clinic_name, c.appointment_date,
                c.state, c.care_state, c.household_size, c.monthly_income, c.gestational_weeks,
-               c.age, c.language, c.needs_travel
+               c.age, c.language, c.needs_travel, c.clinic_ref
         FROM pledges p JOIN funds f ON f.id = p.fund_id JOIN cases c ON c.id = p.case_id
         JOIN clinics cl ON cl.id = c.clinic_id
         WHERE {where} AND p.status IN ({','.join('?' * len(statuses))})
@@ -117,6 +117,7 @@ def fetch_rows(db: sqlite3.Connection, role: str, clinic_id: int | None, fund_id
             "income_band": _band_income(pct), "weeks_band": _band_weeks(r["gestational_weeks"]),
             "age_band": _band_age(r["age"]), "language": "Spanish" if r["language"] == "es" else "English",
             "traveled": "Yes" if r["needs_travel"] else "No",
+            "clinic_ref": r["clinic_ref"] or "",
         }
         out.append(row)
     return out
@@ -146,7 +147,7 @@ def group(rows: list[dict], by: list[str]) -> dict:
 
 
 DATA_COLUMNS = [
-    ("case_ref", "Case"), ("fund", "Fund"), ("clinic", "Clinic"), ("help_type", "Type of help"),
+    ("case_ref", "Case"), ("clinic_ref", "Clinic reference"), ("fund", "Fund"), ("clinic", "Clinic"), ("help_type", "Type of help"),
     ("status", "Status"), ("amount", "Amount ($)"), ("approved_on", "Approved on"), ("paid_on", "Paid on"),
     ("appointment_date", "Appointment"), ("home_state", "Home state"), ("care_state", "State of care"),
     ("income_band", "Income (% of poverty line)"), ("weeks_band", "Weeks pregnant"), ("age_band", "Age"),
@@ -156,6 +157,8 @@ DATA_COLUMNS = [
 
 def data_columns_for(role: str) -> list[tuple[str, str]]:
     hidden = {d for d, (_, roles) in DIMENSIONS.items() if role not in roles}
+    if role != "clinic":
+        hidden.add("clinic_ref")  # the clinic's own appointment/chart number stays with that clinic
     return [(k, lab) for k, lab in DATA_COLUMNS if k not in hidden]
 
 

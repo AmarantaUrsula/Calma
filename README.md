@@ -139,6 +139,10 @@ Sending the demo to colleagues? Share [DEMO_GUIDE.md](DEMO_GUIDE.md) (fill in th
     - **Download Excel:** a `.xlsx` file with a **Report** sheet (the filters and totals) and a **Data** sheet (one de-identified row per pledge: case number, bands instead of exact income, age or weeks; no names or contact details). Groups with fewer than 5 patients are flagged, and every download is recorded in the audit log.
     - **Demo history:** demo data now includes 90 made-up past cases over six months, so the reports have something to show.
 
+20. **Clinic case list:** cases show plain statuses: *Waiting for patient · Needs your approval · Waiting on funds · Approved · Visit completed · Closed*.
+    - **Order:** overdue cases first, then those needing the clinic's approval, then the rest by soonest visit. Filter tabs and a search box help find cases.
+    - **Your reference:** when creating a link, staff can enter their own appointment or chart number, and edit it later on the case. It's clinic-only: never shown to patients or funds, never sent to AI, and included only in the clinic's own Excel downloads.
+
 19. **24-hour decision policy:** clinics and funds approve or decline each pledge within 24 hours of the patient submitting (`CALMA_DECISION_HOURS`).
     - **Patients:** right after seeing their funds, a reminder says the link they were sent by text or email is their status page, and that funds answer within 24 hours ("check back after Tuesday 8:44 PM for a final answer"). The note updates to "all funds have answered", or, if a fund is late, asks them to call the clinic.
     - **Staff:** each waiting pledge shows "Decide by…", then a red "Overdue" flag after 24 hours. Nothing is ever approved or declined automatically.

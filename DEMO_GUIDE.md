@@ -31,7 +31,7 @@ You can also **create your own account** ("Create an account" on the login page)
 ## Things to try (about 20 minutes)
 
 ### 1. A patient's experience (5 min) — the heart of Calma
-1. Log in as **Rosa** (clinic). Under **New appointment**, click **Create link**, then **Open patient link** (or copy it to your phone).
+1. Log in as **Rosa** (clinic). Under **New appointment**, optionally type your own reference (for example an appointment number, which only the clinic sees), click **Create link**, then **Open patient link** (or copy it to your phone).
 2. As the patient: choose **English or Español** and answer the questions. Only the questions the clinic's funds need are asked, one per screen. Try:
    - **State:** Texas
    - **Household:** 3 people

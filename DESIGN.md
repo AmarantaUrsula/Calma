@@ -53,6 +53,10 @@ Based on the product description and flowchart (`design-flowchart.webp`).
     - **Patients:** a reminder that their text/email link is their status page, plus a "check back after [time]" note, then "all funds have answered", or "call the clinic" if a fund is late.
     - **Staff:** "Decide by" and "Overdue" flags. Late pledges are flagged, never auto-decided.
 
+19. **Clinic case list (2026-11-24, from tester feedback):**
+    - **Statuses:** plain "what's next" labels (Waiting for patient / Needs your approval / Waiting on funds / Approved / Visit completed / Closed), with needs-approval and overdue cases sorted to the top.
+    - **Clinic reference:** an optional, clinic-only field for the clinic's own appointment or chart number, which links a Calma case to the clinic's records. Chosen over asking patients for their name: it's exact and stores less personal data. The optional clinic-only contact question remains for clinics that also want a name.
+
 ## Guiding principle: the AI never decides who gets money
 
 Eligibility and pledge amounts must be **deterministic, auditable rules**, not LLM output. These decisions move real money for a vulnerable population. Every result must be explainable ("matched because: lives in TX, income ≤ 200% FPL"), and the same input must always give the same answer. So the **matching engine is plain Python code, not an agent**. Agents go where language is the hard part: turning messy fund policies into rules, explaining things in plain words, and summarizing cases for staff.

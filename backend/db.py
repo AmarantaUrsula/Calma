@@ -209,6 +209,8 @@ ADDED_COLUMNS: dict[str, list[tuple[str, str]]] = {
         ("judicial_bypass", "INTEGER"),
         ("insurance_coverage", "TEXT"),             # 'yes' | 'no' | 'unsure'
         ("questions_asked", "TEXT"),                # JSON list of question ids shown to this patient
+        ("clinic_ref", "TEXT"),                     # the clinic's own appointment/chart number: clinic-only,
+                                                    # never shown to patients or funds, never sent to AI
     ],
     "pledges": [("category", "TEXT NOT NULL DEFAULT 'procedure'")],
     # Staff accounts. password_hash is a salted scrypt hash (see backend/auth.py), never the password.

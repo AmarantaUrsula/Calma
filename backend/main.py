@@ -654,6 +654,12 @@ class NewCase(BaseModel):
     procedure_cost: int = Field(ge=1, le=50_000)
     contact_method: Literal["text", "email"]
     language: Literal["en", "es"] = "en"
+    clinic_ref: str | None = Field(default=None, max_length=60)  # clinic's own appointment/chart number
+
+
+def _clean_ref(v: str | None) -> str | None:
+    v = (v or "").strip()
+    return v or None
 
 
 @app.post("/api/clinic/cases")
@@ -666,9 +672,9 @@ def create_case(body: NewCase, user: User = Depends(require("clinic")), db: sqli
                                tzinfo=clock.now().tzinfo)
     cur = db.execute(
         """INSERT INTO cases (clinic_id, token, token_expires_at, appointment_date, procedure_cost,
-           contact_method, language, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+           contact_method, language, created_at, clinic_ref) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (user.clinic_id, token, expires.isoformat(timespec="seconds"), body.appointment_date.isoformat(),
-         body.procedure_cost, body.contact_method, body.language, clock.now_iso()),
+         body.procedure_cost, body.contact_method, body.language, clock.now_iso(), _clean_ref(body.clinic_ref)),
     )
     audit(db, f"user:{user.id}", "case_created", cur.lastrowid)
     return {"case_id": cur.lastrowid, "case_ref": case_ref(cur.lastrowid), "patient_path": f"/p/{token}"}
@@ -679,6 +685,24 @@ def own_case(db: sqlite3.Connection, user: User, case_id: int) -> sqlite3.Row:
     if not c:
         raise HTTPException(404, "Case not found.")
     return c
+
+
+# What the clinic needs to do next, in plain words (shown instead of the internal status).
+CLINIC_STATUS_ORDER = ["needs_approval", "waiting_funds", "approved", "waiting_patient", "visit_completed", "closed"]
+
+
+def clinic_status(c: sqlite3.Row, pledges: list[dict]) -> str:
+    if c["status"] == "link_sent":
+        return "waiting_patient"
+    if c["status"] == "appointment_done":
+        return "visit_completed"
+    if c["status"] == "closed":
+        return "closed"
+    if any(p["status"] == "pending" and p["fund_kind"] == "clinic" for p in pledges):
+        return "needs_approval"
+    if any(p["status"] == "pending" for p in pledges):
+        return "waiting_funds"
+    return "approved"
 
 
 def case_out(db: sqlite3.Connection, c: sqlite3.Row, detail: bool = False) -> dict:
@@ -694,6 +718,9 @@ def case_out(db: sqlite3.Connection, c: sqlite3.Row, detail: bool = False) -> di
         "patient_path": f"/p/{c['token']}" if c["status"] == "link_sent" else None,
         "pledges": pledges, "approved_total": approved, "practical_approved": practical,
         "patient_owes": max(0, c["procedure_cost"] - approved),
+        "clinic_ref": c["clinic_ref"],
+        "clinic_status": clinic_status(c, pledges),
+        "overdue": any(p["overdue"] and p["fund_kind"] == "clinic" for p in pledges),
     }
     if detail and c["submitted_at"]:
         s = screening_of(c)
@@ -708,10 +735,30 @@ def case_out(db: sqlite3.Connection, c: sqlite3.Row, detail: bool = False) -> di
 
 @app.get("/api/clinic/cases")
 def clinic_cases(user: User = Depends(require("clinic")), db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
-    rows = db.execute(
-        "SELECT * FROM cases WHERE clinic_id = ? ORDER BY appointment_date, id", (user.clinic_id,)
-    ).fetchall()
-    return [case_out(db, c) for c in rows]
+    rows = db.execute("SELECT * FROM cases WHERE clinic_id = ?", (user.clinic_id,)).fetchall()
+    cases = [case_out(db, c) for c in rows]
+
+    # Overdue approvals first, then what needs the clinic, then upcoming work by soonest visit;
+    # finished cases last, most recent first.
+    def key(x):
+        rank = CLINIC_STATUS_ORDER.index(x["clinic_status"])
+        done = x["clinic_status"] in ("visit_completed", "closed")
+        d = date.fromisoformat(x["appointment_date"]).toordinal()
+        return (0 if x["overdue"] else 1, rank, -d if done else d, x["id"])
+    return sorted(cases, key=key)
+
+
+class ClinicRefBody(BaseModel):
+    clinic_ref: str | None = Field(default=None, max_length=60)
+
+
+@app.put("/api/clinic/cases/{case_id}/ref")
+def set_clinic_ref(case_id: int, body: ClinicRefBody, user: User = Depends(require("clinic")),
+                   db: sqlite3.Connection = Depends(get_db)) -> dict:
+    own_case(db, user, case_id)
+    db.execute("UPDATE cases SET clinic_ref = ? WHERE id = ?", (_clean_ref(body.clinic_ref), case_id))
+    audit(db, f"user:{user.id}", "clinic_ref_set", case_id)  # the reference itself isn't logged
+    return {"ok": True, "clinic_ref": _clean_ref(body.clinic_ref)}
 
 
 @app.get("/api/clinic/cases/{case_id}")
