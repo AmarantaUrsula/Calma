@@ -820,3 +820,11 @@ Suggested confirming with clinics which identifier they'd use.
 **Outcome:** No hosting needed: the instruction means the GitHub repo URL must appear inside report.html and slides.html, so graders can find and clone the repo. Checked: both files contain https://github.com/AmarantaUrsula/Calma (report: section 1 "Code" row; slides: title slide), and the repo is public (opens logged out; `git ls-remote` works without credentials). No changes besides this log entry.
 
 ---
+
+## Prompt 60 — 2026-11-24
+
+> can I export the report as a word or pdf?
+
+**Outcome:** PDF, yes: made report.pdf (15 letter pages, 1.7 MB) from report.html with Chrome's print-to-PDF, the same way the page count is checked; links stay clickable. Not committed yet. Word isn't recommended: converting would lose the layout (diagrams drawn in SVG, side-by-side screenshots, table styling), and no converter is installed. To make the PDF yourself: open report.html in Chrome → Print → Save as PDF, Letter, margins Default, "Background graphics" on.
+
+---
