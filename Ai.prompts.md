@@ -804,3 +804,11 @@ Suggested confirming with clinics which identifier they'd use.
 **Outcome:** Built **slides.html**: 10 reveal.js slides (loaded from a CDN) following the professor's outline, with one extra slide for a real agent run: (1) title with links and a one-line flow, (2) the problem with cost and NNAF figures, (3) what's new as a comparison table, (4) the agents diagram from the report, (5) one real run (Carolina Abortion Fund), (6) demo screenshots (patient, clinic, fund), (7) cost per run and at scale, (8) safety risks with the prompt-injection test, (9) impact numbers marked measured or estimate, plus the tester's five changes, (10) limits and next steps. Tufte-style: each headline states the slide's takeaway; serif type (Source Serif 4); app colors used only where they carry meaning; tables with thin rules only, no fills or vertical lines; no decorative images, transitions or progress bar. Screenshots and the diagram are embedded, so the file works when emailed. The demo password is not in the deck (public repo); it points to the Canvas submission. Checked every slide in the browser at 1280×720: nothing overflows, no console errors. Source is `report-assets/slides_template.html`, rebuilt with `build_slides.py`; README updated.
 
 ---
+
+## Prompt 58 — 2026-11-24
+
+> Do we still need to commit and push all this to git? This is how my professor will grade, he wil clone my repo
+
+**Outcome:** No: everything was already committed and pushed (local main matched GitHub, nothing uncommitted). Confirmed report.html, slides.html, README, DEMO_GUIDE and this log are all in the repo. Committed and pushed this log entry.
+
+---
