@@ -18,13 +18,13 @@ type Answers = {
   lmp_date: string; lmp_unknown: boolean; gestational_weeks: number | null; weeks_unknown: boolean;
   needs_travel: YN; age: number | null; age_skipped: boolean;
   travel_miles: number | null; nights_away: number | null; meal_days: number | null; childcare_days: number | null;
-  insurance_coverage: "yes" | "no" | "unsure" | null; unhoused: YN; judicial_bypass: YN;
+  insurance_coverage: "yes" | "no" | "unsure" | null; medicaid: "yes" | "no" | "unsure" | null; unhoused: YN; judicial_bypass: YN;
   first_name: string; last_name: string; phone: string; email: string; notify_pref: "text" | "email" | "";
   skipped: Record<string, boolean>;
 };
 
 const TRAVEL_DETAILS = ["travel_miles", "nights_away", "meal_days", "childcare_days"];
-const OPTIONAL_STEPS = new Set(["age", ...TRAVEL_DETAILS, "insurance", "unhoused", "judicial_bypass", "contact"]);
+const OPTIONAL_STEPS = new Set(["age", ...TRAVEL_DETAILS, "medicaid", "insurance", "unhoused", "judicial_bypass", "contact"]);
 
 // Which screens this patient sees: core questions, plus whatever the clinic's funds need or asked for.
 function stepsFor(questions: string[], a: Answers): string[] {
@@ -33,6 +33,7 @@ function stepsFor(questions: string[], a: Answers): string[] {
   if (has("age")) steps.push("age");
   steps.push("travel");
   if (a.needs_travel) TRAVEL_DETAILS.forEach((q) => has(q) && steps.push(q));
+  if (has("medicaid")) steps.push("medicaid");
   if (has("insurance")) steps.push("insurance");
   if (has("unhoused")) steps.push("unhoused");
   if (has("judicial_bypass") && (a.age == null || a.age_skipped || a.age < 18)) steps.push("judicial_bypass");
@@ -163,7 +164,7 @@ function ScreeningForm({ t, lang, states, questions, token, onDone }: {
     lmp_date: "", lmp_unknown: false, gestational_weeks: null, weeks_unknown: false,
     needs_travel: null, age: null, age_skipped: false,
     travel_miles: null, nights_away: null, meal_days: null, childcare_days: null,
-    insurance_coverage: null, unhoused: null, judicial_bypass: null,
+    insurance_coverage: null, medicaid: null, unhoused: null, judicial_bypass: null,
     first_name: "", last_name: "", phone: "", email: "", notify_pref: "", skipped: {},
   });
   const [busy, setBusy] = useState(false);
@@ -187,7 +188,7 @@ function ScreeningForm({ t, lang, states, questions, token, onDone }: {
     travel: a.needs_travel != null,
     travel_miles: a.travel_miles != null && a.travel_miles >= 0,
     nights_away: a.nights_away != null, meal_days: a.meal_days != null, childcare_days: a.childcare_days != null,
-    insurance: a.insurance_coverage != null, unhoused: a.unhoused != null, judicial_bypass: a.judicial_bypass != null,
+    insurance: a.insurance_coverage != null, medicaid: a.medicaid != null, unhoused: a.unhoused != null, judicial_bypass: a.judicial_bypass != null,
     contact: true, review: true,
   };
 
@@ -207,7 +208,8 @@ function ScreeningForm({ t, lang, states, questions, token, onDone }: {
           age: val("age", a.age_skipped ? null : a.age),
           travel_miles: val("travel_miles", a.travel_miles), nights_away: val("nights_away", a.nights_away),
           meal_days: val("meal_days", a.meal_days), childcare_days: val("childcare_days", a.childcare_days),
-          insurance_coverage: val("insurance", a.insurance_coverage), unhoused: val("unhoused", a.unhoused),
+          insurance_coverage: val("insurance", a.insurance_coverage), medicaid: val("medicaid", a.medicaid),
+          unhoused: val("unhoused", a.unhoused),
           judicial_bypass: val("judicial_bypass", a.judicial_bypass),
           contact: contactOn ? {
             first_name: a.first_name || null, last_name: a.last_name || null, phone: a.phone || null,
@@ -257,6 +259,7 @@ function ScreeningForm({ t, lang, states, questions, token, onDone }: {
     ...(steps.includes("nights_away") ? [[t.nightsLabel, a.skipped.nights_away ? t.skipped : count(a.nights_away), "nights_away"] as [string, string, string]] : []),
     ...(steps.includes("meal_days") ? [[t.mealsLabel, a.skipped.meal_days ? t.skipped : count(a.meal_days), "meal_days"] as [string, string, string]] : []),
     ...(steps.includes("childcare_days") ? [[t.childcareLabel, a.skipped.childcare_days ? t.skipped : count(a.childcare_days), "childcare_days"] as [string, string, string]] : []),
+    ...(steps.includes("medicaid") ? [[t.medicaidLabel, a.skipped.medicaid || !a.medicaid ? t.skipped : a.medicaid === "unsure" ? t.notSure : a.medicaid === "yes" ? t.yes : t.no, "medicaid"] as [string, string, string]] : []),
     ...(steps.includes("insurance") ? [[t.insuranceLabel, a.skipped.insurance || !a.insurance_coverage ? t.skipped : a.insurance_coverage === "unsure" ? t.notSure : a.insurance_coverage === "yes" ? t.yes : t.no, "insurance"] as [string, string, string]] : []),
     ...(steps.includes("unhoused") ? [[t.unhousedLabel, a.skipped.unhoused ? t.skipped : yn(a.unhoused), "unhoused"] as [string, string, string]] : []),
     ...(steps.includes("judicial_bypass") ? [[t.bypassLabel, a.skipped.judicial_bypass ? t.skipped : yn(a.judicial_bypass), "judicial_bypass"] as [string, string, string]] : []),
@@ -346,6 +349,11 @@ function ScreeningForm({ t, lang, states, questions, token, onDone }: {
       {step === "nights_away" && <Question id="q-nights" label={t.nightsQ} hint={t.countHint}><Counter field="nights_away" /></Question>}
       {step === "meal_days" && <Question id="q-meals" label={t.mealsQ} hint={t.countHint}><Counter field="meal_days" /></Question>}
       {step === "childcare_days" && <Question id="q-care" label={t.childcareQ} hint={t.countHint}><Counter field="childcare_days" /></Question>}
+      {step === "medicaid" && (
+        <Question id="q-medicaid" label={t.medicaidQ} hint={t.medicaidHint}>
+          <YesNo unsure value={a.medicaid} onPick={(v) => set({ medicaid: v })} />
+        </Question>
+      )}
       {step === "insurance" && (
         <Question id="q-ins" label={t.insuranceQ} hint={t.insuranceHint}>
           <YesNo unsure value={a.insurance_coverage} onPick={(v) => set({ insurance_coverage: v })} />

@@ -193,6 +193,9 @@ def approved_rules(db: sqlite3.Connection, fund_ids: list[int]) -> list[FundRule
             rate_per_mile_cents=v["rate_per_mile_cents"], rate_per_night=v["rate_per_night"],
             rate_per_meal_day=v["rate_per_meal_day"], rate_per_childcare_day=v["rate_per_childcare_day"],
             no_insurance_only=v["no_insurance_only"], extra_questions=tuple(v["extra_questions"]),
+            income_waiver_categories=tuple(v["income_waiver_categories"]),
+            waiver_pledge_percent=v["waiver_pledge_percent"], waiver_pledge_cap=v["waiver_pledge_cap"],
+            exclude_medicaid_covered=v["exclude_medicaid_covered"],
         ))
     return rules
 
@@ -219,7 +222,7 @@ def screening_of(case: sqlite3.Row) -> Screening:
         care_state=case["care_state"], travel_miles=case["travel_miles"], nights_away=case["nights_away"],
         meal_days=case["meal_days"], childcare_days=case["childcare_days"],
         insurance_coverage=case["insurance_coverage"], unhoused=_opt_bool(case["unhoused"]),
-        judicial_bypass=_opt_bool(case["judicial_bypass"]),
+        judicial_bypass=_opt_bool(case["judicial_bypass"]), medicaid=case["medicaid"],
     )
 
 
@@ -229,7 +232,7 @@ ANSWER_FIELDS = {
     "pregnancy": ["gestational_weeks"], "travel": ["needs_travel"], "age": ["age"],
     "travel_miles": ["travel_miles"], "nights_away": ["nights_away"], "meal_days": ["meal_days"],
     "childcare_days": ["childcare_days"], "insurance": ["insurance_coverage"], "unhoused": ["unhoused"],
-    "judicial_bypass": ["judicial_bypass"],
+    "judicial_bypass": ["judicial_bypass"], "medicaid": ["medicaid"],
 }
 
 
@@ -558,6 +561,7 @@ class ScreeningBody(BaseModel):
     meal_days: int | None = Field(default=None, ge=0, le=7)
     childcare_days: int | None = Field(default=None, ge=0, le=7)
     insurance_coverage: Literal["yes", "no", "unsure"] | None = None
+    medicaid: Literal["yes", "no", "unsure"] | None = None
     unhoused: bool | None = None
     judicial_bypass: bool | None = None
     contact: ContactBody | None = None
@@ -591,16 +595,17 @@ def patient_screening(token: str, body: ScreeningBody, db: sqlite3.Connection = 
     care = keep("childcare_days", body.childcare_days) if travel else None
     bypass = keep("judicial_bypass", body.judicial_bypass) if (age is None or age < 18) else None
     insurance = keep("insurance", body.insurance_coverage)
+    has_medicaid = keep("medicaid", body.medicaid)
     unhoused = keep("unhoused", body.unhoused)
 
     db.execute(
         """UPDATE cases SET state=?, household_size=?, monthly_income=?, gestational_weeks=?, needs_travel=?,
            age=?, care_state=?, travel_miles=?, nights_away=?, meal_days=?, childcare_days=?,
-           insurance_coverage=?, unhoused=?, judicial_bypass=?, questions_asked=?,
+           insurance_coverage=?, unhoused=?, judicial_bypass=?, questions_asked=?, medicaid=?,
            status='screened', submitted_at=? WHERE id=?""",
         (body.state, body.household_size, body.monthly_income, weeks, int(travel), age, c["clinic_state"],
          miles, nights, meals, care, insurance, None if unhoused is None else int(unhoused),
-         None if bypass is None else int(bypass), json.dumps(asked), clock.now_iso(), c["id"]),
+         None if bypass is None else int(bypass), json.dumps(asked), has_medicaid, clock.now_iso(), c["id"]),
     )
     if "contact" in a and body.contact and any(body.contact.model_dump().values()):
         k = body.contact
@@ -982,6 +987,10 @@ class RuleValues(BaseModel):
     rate_per_childcare_day: int | None = Field(default=None, ge=0, le=1000)
     no_insurance_only: bool = False
     extra_questions: list[str] = Field(default_factory=list)
+    income_waiver_categories: list[Literal["unhoused", "judicial_bypass"]] = Field(default_factory=list)
+    waiver_pledge_percent: int | None = Field(default=None, ge=1, le=100)
+    waiver_pledge_cap: int | None = Field(default=None, ge=1)
+    exclude_medicaid_covered: bool = False
 
 
 def clean_rules(body: RuleValues) -> dict:
@@ -1007,6 +1016,9 @@ def clean_rules(body: RuleValues) -> dict:
     d = body.model_dump()
     d["states"] = states
     d["extra_questions"] = [q for q in Q.FUND_ASKABLE if q in body.extra_questions]
+    d["income_waiver_categories"] = [c for c in ("unhoused", "judicial_bypass") if c in body.income_waiver_categories]
+    if not d["income_waiver_categories"] or body.support_type == "practical":
+        d["income_waiver_categories"], d["waiver_pledge_percent"], d["waiver_pledge_cap"] = [], None, None
     if body.support_type == "practical":
         d["pledge_kind"] = "fixed"          # practical: flat amount + rates, cap applies
     else:
@@ -1498,6 +1510,15 @@ async def report_ask(body: AskBody, user: User = Depends(current_user), db: sqli
 @app.get("/api/admin/ai-usage")
 def admin_ai_usage(user: User = Depends(require("admin")), db: sqlite3.Connection = Depends(get_db)) -> dict:
     return ai_budget.summary(db)
+
+
+# ---------- reference data ----------
+
+@app.get("/api/medicaid-coverage")
+def medicaid_coverage(user: User = Depends(current_user)) -> dict:
+    from . import medicaid
+    return {"states": sorted(medicaid.COVERS_ABORTION), "with_medical_necessity": sorted(medicaid.COVERS_WITH_MEDICAL_NECESSITY),
+            "as_of": medicaid.AS_OF, "source": medicaid.SOURCE}
 
 
 # ---------- the web app (production only; must be the last route) ----------

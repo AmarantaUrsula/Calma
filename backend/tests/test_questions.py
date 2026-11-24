@@ -88,14 +88,16 @@ def test_clinic_sees_why_each_question_is_asked_and_can_add_more(client):
 
 
 def test_unasked_answers_are_dropped_and_lmp_sets_weeks(client):
-    dana = login(client, 2)  # Prairie: no fund asks about unhoused or insurance
+    dana = login(client, 2)  # Prairie: no fund asks about insurance (its own fund does ask about being unhoused)
     cid, tok = new_case(client, dana, date="2026-11-30")
     client.post(f"/api/p/{tok}/screening", json={
         "state": "KS", "household_size": 2, "monthly_income": 1500, "lmp_date": "2026-10-05",
         "needs_travel": False, "unhoused": True, "insurance_coverage": "yes", "judicial_bypass": True, "age": 30})
     s = client.get(f"/api/clinic/cases/{cid}", headers=dana).json()["screening"]
     assert s["gestational_weeks"] == 8          # Oct 5 -> Nov 30 = 56 days
-    assert s["unhoused"] is None and s["insurance_coverage"] is None and s["judicial_bypass"] is None
+    assert s["insurance_coverage"] is None    # not asked: dropped
+    assert s["unhoused"] is True              # asked by Prairie's own fund (income exception): kept
+    assert s["judicial_bypass"] is True       # asked: Prairie doesn't ask age, so bypass is asked of everyone
     assert s["care_state"] == "KS"
 
 
@@ -154,3 +156,38 @@ def test_lives_in_or_gets_care_in():
     assert any("Getting care in SC" in x for x in match(care, 1000, [either]).matches[0].reasons)
     r = match(neither, 1000, [either])
     assert not r.matches and "live in or get care in NC, SC" in r.skipped[0].reasons[0]
+
+
+# ---------- clinic-fund exceptions: unhoused / judicial bypass, and Medicaid states ----------
+
+CLINIC = dict(kind="clinic", income_max_fpl_pct=200, pledge_kind="percent", pledge_value=50, pledge_cap=300,
+              income_waiver_categories=("unhoused", "judicial_bypass"), waiver_pledge_percent=100, waiver_pledge_cap=600,
+              exclude_medicaid_covered=True)
+RICH = Screening(state="TX", household_size=1, monthly_income=6000, gestational_weeks=8, needs_travel=False, care_state="NM")
+
+
+def test_unhoused_or_bypass_skips_income_limit_and_raises_pledge():
+    assert not match(RICH, 1000, [rule(1, **CLINIC)]).matches  # over the income limit
+    for extra in ({"unhoused": True}, {"judicial_bypass": True, "age": 16}):
+        m = match(Screening(**{**RICH.__dict__, **extra}), 1000, [rule(1, **CLINIC)]).matches[0]
+        assert m.suggested_amount == 600  # 100% of $1,000, capped at $600 (instead of 50% up to $300)
+        assert any("Income limit doesn't apply" in r for r in m.reasons)
+
+
+def test_medicaid_in_a_covering_state_gets_no_clinic_fund():
+    poor = {"monthly_income": 900}
+    nm = Screening(**{**RICH.__dict__, **poor, "state": "NM", "medicaid": "yes"})
+    tx = Screening(**{**RICH.__dict__, **poor, "state": "TX", "medicaid": "yes"})
+    r = match(nm, 1000, [rule(1, **CLINIC), rule(2)])  # rule 2: an outside fund without the Medicaid rule
+    assert [m.fund_id for m in r.matches] == [2] and "Medicaid covers abortion" in r.skipped[0].reasons[0]
+    assert match(tx, 1000, [rule(1, **CLINIC)]).matches[0].suggested_amount == 300  # TX Medicaid doesn't cover
+    unsure = match(Screening(**{**nm.__dict__, "medicaid": "unsure"}), 1000, [rule(1, **CLINIC)]).matches[0]
+    assert any("check enrollment before approving" in x for x in unsure.reasons)
+    unhoused_nm = match(Screening(**{**nm.__dict__, "unhoused": True}), 1000, [rule(1, **CLINIC)])
+    assert not unhoused_nm.matches  # the Medicaid rule still applies to people with an income exception
+
+
+def test_clinic_fund_rules_add_the_needed_questions(client):
+    q = client.get("/api/clinic/questions", headers=login(client, 2)).json()  # Prairie
+    assert {"medicaid", "unhoused", "judicial_bypass"} <= set(q["asked"])
+    assert any("needed for its rules" in w for w in q["why"]["medicaid"])

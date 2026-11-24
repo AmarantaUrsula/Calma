@@ -191,6 +191,10 @@ ADDED_COLUMNS: dict[str, list[tuple[str, str]]] = {
         ("rate_per_childcare_day", "INTEGER"),      # practical support: dependent care per day
         ("no_insurance_only", "INTEGER NOT NULL DEFAULT 0"),    # only helps if insurance doesn't cover abortion
         ("extra_questions", "TEXT NOT NULL DEFAULT '[]'"),      # optional intake questions this fund wants asked
+        ("income_waiver_categories", "TEXT NOT NULL DEFAULT '[]'"),  # e.g. ["unhoused","judicial_bypass"]: income limit doesn't apply
+        ("waiver_pledge_percent", "INTEGER"),       # pledge for those patients (% of cost); NULL = usual pledge
+        ("waiver_pledge_cap", "INTEGER"),
+        ("exclude_medicaid_covered", "INTEGER NOT NULL DEFAULT 0"),  # no pledge if patient's Medicaid covers abortion
     ],
     "funds": [
         ("policy_url", "TEXT"),
@@ -209,6 +213,7 @@ ADDED_COLUMNS: dict[str, list[tuple[str, str]]] = {
         ("judicial_bypass", "INTEGER"),
         ("insurance_coverage", "TEXT"),             # 'yes' | 'no' | 'unsure'
         ("questions_asked", "TEXT"),                # JSON list of question ids shown to this patient
+        ("medicaid", "TEXT"),                       # 'yes' | 'no' | 'unsure'
         ("clinic_ref", "TEXT"),                     # the clinic's own appointment/chart number: clinic-only,
                                                     # never shown to patients or funds, never sent to AI
     ],

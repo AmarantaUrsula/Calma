@@ -142,11 +142,13 @@ RULE_FIELDS = [
     "pledge_kind", "pledge_value", "pledge_cap",
     "state_basis", "support_type", "rate_per_mile_cents", "rate_per_night", "rate_per_meal_day",
     "rate_per_childcare_day", "no_insurance_only", "extra_questions",
+    "income_waiver_categories", "waiver_pledge_percent", "waiver_pledge_cap", "exclude_medicaid_covered",
 ]
 
 RULE_DEFAULTS = {
     "states": [], "requires_travel": False, "state_basis": "residence", "support_type": "procedure",
     "no_insurance_only": False, "extra_questions": [],
+    "income_waiver_categories": [], "exclude_medicaid_covered": False,
 }
 
 

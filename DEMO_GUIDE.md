@@ -92,3 +92,5 @@ Groups with fewer than 5 patients are marked with *, because small numbers can p
 - **The report box**, which turns your request into report settings. The numbers are calculated by Calma, not the AI.
 
 AI never sees patient answers.
+
+**Clinic fund exceptions:** unhoused patients and minors seeking a judicial bypass skip the clinic fund's income limit and get its exception amount (demo: 100% of the cost, up to $600 at Mesa). Patients with Medicaid in a state where Medicaid covers abortion (like New Mexico) get no clinic fund pledge, because Medicaid should pay. Partner funds are still checked. Try it: as a patient in New Mexico, answer "Yes" to "Do you have Medicaid?".

@@ -8,6 +8,8 @@ export type Rules = {
   pledge_cap: number | null; state_basis: "residence" | "care" | "either"; support_type: "procedure" | "practical";
   rate_per_mile_cents: number | null; rate_per_night: number | null; rate_per_meal_day: number | null;
   rate_per_childcare_day: number | null; no_insurance_only: boolean; extra_questions: string[];
+  income_waiver_categories: string[]; waiver_pledge_percent: number | null; waiver_pledge_cap: number | null;
+  exclude_medicaid_covered: boolean;
 };
 export type RulesView = {
   rules: Rules; version: number; verified_by: string; last_verified_at: string; days_since_confirmed: number | null;
@@ -28,11 +30,13 @@ const LABELS: Record<keyof Rules, string> = {
   state_basis: "Eligibility based on", support_type: "Type of help", rate_per_mile_cents: "Per mile",
   rate_per_night: "Per night", rate_per_meal_day: "Meals per day", rate_per_childcare_day: "Childcare per day",
   no_insurance_only: "Only patients without insurance coverage", extra_questions: "Extra questions",
+  income_waiver_categories: "Income limit exceptions", waiver_pledge_percent: "Exception pledge (%)",
+  waiver_pledge_cap: "Exception pledge cap", exclude_medicaid_covered: "Not when Medicaid covers abortion",
 };
 
 const QUESTION_LABELS: Record<string, string> = {
   age: "Age", travel_miles: "Travel miles", nights_away: "Nights away from home", meal_days: "Days needing meals",
-  childcare_days: "Days needing dependent care", insurance: "Medicaid / insurance that covers abortion",
+  childcare_days: "Days needing dependent care", medicaid: "Has Medicaid", insurance: "Insurance that covers abortion",
   unhoused: "Currently unhoused", judicial_bypass: "Minor seeking a judicial bypass",
 };
 
@@ -49,7 +53,10 @@ function describe(k: keyof Rules, v: unknown, r: Rules): string {
   if (k === "support_type") return v === "practical" ? "Travel & practical support" : "Toward the procedure";
   if (k === "rate_per_mile_cents") return `$${((v as number) / 100).toFixed(2)}/mile`;
   if (k === "rate_per_night" || k === "rate_per_meal_day" || k === "rate_per_childcare_day") return money(v as number);
-  if (k === "no_insurance_only") return v ? "Yes" : "No";
+  if (k === "no_insurance_only" || k === "exclude_medicaid_covered") return v ? "Yes" : "No";
+  if (k === "income_waiver_categories") return (v as string[]).length ? (v as string[]).map((c) => (c === "unhoused" ? "unhoused" : "judicial bypass")).join(", ") : "None";
+  if (k === "waiver_pledge_percent") return `${v}%`;
+  if (k === "waiver_pledge_cap") return money(v as number);
   if (k === "extra_questions") return (v as string[]).length ? (v as string[]).map((q) => QUESTION_LABELS[q] ?? q).join(", ") : "None";
   return `${v} weeks`;
 }
@@ -213,6 +220,35 @@ export default function FundRules({ view, onSaved, base = "/api/fund/rules" }: {
         <p className="muted small">This is the amount Calma suggests. You still approve every pledge yourself and can change the amount each time.</p>
       </div>
 
+      {r.support_type === "procedure" && (
+        <div className="card">
+          <h2>Exceptions</h2>
+          <p className="muted small">Patients in these groups skip your income limit. Calma asks them the matching question automatically.</p>
+          <div className="decide">
+            {[["unhoused", "Currently unhoused"], ["judicial_bypass", "Minors seeking a judicial bypass"]].map(([id, label]) => (
+              <label key={id} className="check-inline">
+                <input type="checkbox" checked={r.income_waiver_categories.includes(id)}
+                  onChange={(e) => set({ income_waiver_categories: e.target.checked ? [...r.income_waiver_categories, id] : r.income_waiver_categories.filter((x) => x !== id) })} /> {label}
+              </label>
+            ))}
+          </div>
+          {r.income_waiver_categories.length > 0 && (
+            <div className="inline-field">
+              For them, pledge <input className="input amt" type="number" min={1} max={100} placeholder="usual" value={r.waiver_pledge_percent ?? ""}
+                onChange={(e) => set({ waiver_pledge_percent: num(e.target.value) })} aria-label="Exception pledge percent" />% of the cost, up to $
+              <input className="input amt" type="number" min={1} placeholder="no cap" value={r.waiver_pledge_cap ?? ""}
+                onChange={(e) => set({ waiver_pledge_cap: num(e.target.value) })} aria-label="Exception pledge cap" />
+              <span className="muted small">Leave the percent blank to use your usual pledge.</span>
+            </div>
+          )}
+          <label className="check-inline" style={{ marginTop: 10 }}>
+            <input type="checkbox" checked={r.exclude_medicaid_covered} onChange={(e) => set({ exclude_medicaid_covered: e.target.checked })} />
+            No pledge if the patient has Medicaid in a state where Medicaid covers abortion (Medicaid should pay)
+          </label>
+          {r.exclude_medicaid_covered && <MedicaidStates />}
+        </div>
+      )}
+
       <div className="card">
         <h2>Extra questions to ask patients</h2>
         <p className="muted small">Turn these on to see the answers on each patient's card, even if your rules don't use them. Patients can skip any of them. Questions your rules need are asked automatically.</p>
@@ -264,5 +300,18 @@ export default function FundRules({ view, onSaved, base = "/api/fund/rules" }: {
         </table>
       </div>
     </div>
+  );
+}
+
+function MedicaidStates() {
+  const [d, setD] = useState<{ states: string[]; with_medical_necessity: string[]; as_of: string; source: string } | null>(null);
+  useEffect(() => { api<typeof d>("/api/medicaid-coverage").then(setD).catch(() => {}); }, []);
+  if (!d) return null;
+  return (
+    <p className="muted small">
+      States whose Medicaid covers abortion ({d.states.length}): {d.states.join(", ")}.
+      {" "}{d.with_medical_necessity.length} of them require a medical-necessity designation.
+      {" "}Source: <a href={d.source} target="_blank" rel="noreferrer">Guttmacher Institute</a>, as of {d.as_of}.
+    </p>
   );
 }

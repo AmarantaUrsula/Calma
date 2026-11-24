@@ -23,8 +23,8 @@ CLINICS = [
 
 # id, name, kind, owner_clinic_id, monthly_limit, description
 FUNDS = [
-    (1, "Mesa Patient Assistance Fund", "clinic", 1, 6000, "Mesa's own fund. Covers up to half the cost, max $300."),
-    (2, "Prairie Patient Assistance Fund", "clinic", 2, 4000, "Prairie's own fund. Covers up to half the cost, max $250."),
+    (1, "Mesa Patient Assistance Fund", "clinic", 1, 6000, "Mesa's own fund. Covers up to half the cost, max $300; more for unhoused patients and minors seeking a judicial bypass."),
+    (2, "Prairie Patient Assistance Fund", "clinic", 2, 4000, "Prairie's own fund. Covers up to half the cost, max $250; more for unhoused patients and minors seeking a judicial bypass."),
     (3, "Desert Bloom Fund", "independent", None, 8000, "Fictional fund for TX, NM and AZ residents."),
     (4, "Heartland Access Fund", "independent", None, 5000, "Fictional fund for KS, MO and OK residents."),
     (5, "Open Road Travel Fund", "independent", None, 3000, "Fictional practical-support fund: gas, lodging, meals and childcare for TX and OK patients who must travel."),
@@ -75,8 +75,14 @@ PARTNERSHIPS = [
 
 # fund_id: criteria (version 1, approved)
 CRITERIA = {
-    1: dict(states=["*"], income_max_fpl_pct=300, pledge_kind="percent", pledge_value=50, pledge_cap=300),
-    2: dict(states=["*"], income_max_fpl_pct=250, pledge_kind="percent", pledge_value=50, pledge_cap=250),
+    # Clinic funds: being unhoused or a minor seeking a judicial bypass skips the income limit and raises the
+    # pledge; no pledge when the patient's Medicaid covers abortion (Guttmacher list in backend/medicaid.py).
+    1: dict(states=["*"], income_max_fpl_pct=300, pledge_kind="percent", pledge_value=50, pledge_cap=300,
+            income_waiver_categories=["unhoused", "judicial_bypass"], waiver_pledge_percent=100, waiver_pledge_cap=600,
+            exclude_medicaid_covered=True),
+    2: dict(states=["*"], income_max_fpl_pct=250, pledge_kind="percent", pledge_value=50, pledge_cap=250,
+            income_waiver_categories=["unhoused", "judicial_bypass"], waiver_pledge_percent=100, waiver_pledge_cap=500,
+            exclude_medicaid_covered=True),
     3: dict(states=["TX", "NM", "AZ"], income_max_fpl_pct=300, pledge_kind="fixed", pledge_value=250,
             no_insurance_only=True, extra_questions=["unhoused"]),
     4: dict(states=["KS", "MO", "OK"], income_max_fpl_pct=250, pledge_kind="fixed", pledge_value=200),

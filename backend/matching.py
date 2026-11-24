@@ -20,6 +20,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from . import medicaid
+
 # 2025 HHS poverty guidelines, 48 contiguous states + DC (annual dollars).
 # Alaska and Hawaii have higher guidelines; not modelled in the demo.
 FPL_BASE = 15_650
@@ -51,6 +53,7 @@ class Screening:
     insurance_coverage: str | None = None  # 'yes' | 'no' | 'unsure' | None (not asked)
     unhoused: bool | None = None
     judicial_bypass: bool | None = None
+    medicaid: str | None = None             # 'yes' | 'no' | 'unsure' | None (not asked)
 
 
 @dataclass(frozen=True)
@@ -76,6 +79,13 @@ class FundRule:
     rate_per_childcare_day: int | None = None
     no_insurance_only: bool = False
     extra_questions: tuple[str, ...] = ()
+    # Patients in these groups skip the income limit (e.g. unhoused, minors seeking a judicial bypass),
+    # and may get a different pledge (percent of cost, up to a cap).
+    income_waiver_categories: tuple[str, ...] = ()
+    waiver_pledge_percent: int | None = None
+    waiver_pledge_cap: int | None = None
+    # No pledge when the patient has Medicaid and their state's Medicaid covers abortion (it should pay).
+    exclude_medicaid_covered: bool = False
 
 
 @dataclass
@@ -111,6 +121,18 @@ class MatchResult:
         return sum(m.suggested_amount for m in self.matches if m.category == "practical")
 
 
+WAIVER_LABELS = {"unhoused": "currently unhoused", "judicial_bypass": "a minor seeking a judicial bypass"}
+
+
+def waiver_reason(s: Screening, r: FundRule) -> str | None:
+    """Which income-limit exception applies to this patient, if any."""
+    if "unhoused" in r.income_waiver_categories and s.unhoused:
+        return "unhoused"
+    if "judicial_bypass" in r.income_waiver_categories and s.judicial_bypass:
+        return "judicial_bypass"
+    return None
+
+
 def check_rule(s: Screening, r: FundRule, pct: int) -> tuple[bool, list[str]]:
     """Return (eligible, reasons). Reasons explain a match, or why it failed."""
     ok: list[str] = []
@@ -139,7 +161,10 @@ def check_rule(s: Screening, r: FundRule, pct: int) -> tuple[bool, list[str]]:
         else:
             fail.append(f"{verb} {where or 'unknown state'}; fund covers only {served} {covered}")
 
-    if r.income_max_fpl_pct is not None:
+    waiver = waiver_reason(s, r)
+    if r.income_max_fpl_pct is not None and waiver:
+        ok.append(f"Income limit doesn't apply: patient is {WAIVER_LABELS[waiver]}")
+    elif r.income_max_fpl_pct is not None:
         if pct <= r.income_max_fpl_pct:
             ok.append(f"Income is {pct}% of poverty line (limit {r.income_max_fpl_pct}%)")
         else:
@@ -175,10 +200,24 @@ def check_rule(s: Screening, r: FundRule, pct: int) -> tuple[bool, list[str]]:
         else:
             ok.append("Not sure about insurance coverage (fund helps people without coverage — check before approving)")
 
+    if r.exclude_medicaid_covered and s.medicaid in ("yes", "unsure"):
+        where = s.state or "unknown state"
+        if s.medicaid == "yes" and medicaid.covers(s.state):
+            fail.append(f"Has Medicaid in {where}, where Medicaid covers abortion; Medicaid should pay, so this fund doesn't")
+        elif s.medicaid == "yes":
+            ok.append(f"Has Medicaid in {where}, where Medicaid doesn't cover abortion")
+        elif medicaid.covers(s.state):
+            ok.append(f"Not sure about Medicaid; {where} Medicaid covers abortion, so check enrollment before approving")
+
     return (not fail, ok if not fail else fail)
 
 
-def pledge_amount(r: FundRule, procedure_cost: int) -> int:
+def pledge_amount(r: FundRule, procedure_cost: int, s: "Screening | None" = None) -> int:
+    if s is not None and r.waiver_pledge_percent is not None and waiver_reason(s, r):
+        amount = procedure_cost * r.waiver_pledge_percent // 100
+        if r.waiver_pledge_cap is not None:
+            amount = min(amount, r.waiver_pledge_cap)
+        return max(0, amount)
     if r.pledge_kind == "fixed":
         amount = r.pledge_value
     else:
@@ -236,11 +275,14 @@ def match(screening: Screening, procedure_cost: int, rules: list[FundRule]) -> M
             reasons.append(f"Suggested travel/practical help: {note}")
             matches.append(Match(r.fund_id, r.fund_name, r.kind, r.criteria_id, amount, reasons, "practical"))
             continue
-        amount = min(pledge_amount(r, procedure_cost), remaining)
+        amount = min(pledge_amount(r, procedure_cost, screening), remaining)
         if amount <= 0:
             skipped.append(Skip(r.fund_id, r.fund_name, ["Procedure cost already covered by other pledges"]))
             continue
-        if r.pledge_kind == "percent":
+        if r.waiver_pledge_percent is not None and waiver_reason(screening, r):
+            cap = f", up to ${r.waiver_pledge_cap}" if r.waiver_pledge_cap is not None else ""
+            reasons.append(f"Suggested: {r.waiver_pledge_percent}% of ${procedure_cost}{cap} (exception amount)")
+        elif r.pledge_kind == "percent":
             cap = f", up to ${r.pledge_cap}" if r.pledge_cap is not None else ""
             reasons.append(f"Suggested: {r.pledge_value}% of ${procedure_cost}{cap}")
         else:

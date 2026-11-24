@@ -88,6 +88,7 @@ export function answerRows(a: Record<string, unknown>): [string, string][] {
     ["Nights away", n(a.nights_away, "nights"), a.nights_away],
     ["Days of meals", n(a.meal_days, "days"), a.meal_days],
     ["Days of dependent care", n(a.childcare_days, "days"), a.childcare_days],
+    ["Has Medicaid", a.medicaid === "unsure" ? "Not sure" : a.medicaid === "yes" ? "Yes" : a.medicaid === "no" ? "No" : "—", a.medicaid],
     ["Insurance covers abortion", a.insurance_coverage === "unsure" ? "Not sure" : a.insurance_coverage === "yes" ? "Yes" : a.insurance_coverage === "no" ? "No" : "—", a.insurance_coverage],
     ["Unhoused", yn(a.unhoused), a.unhoused],
     ["Minor seeking judicial bypass", yn(a.judicial_bypass), a.judicial_bypass],

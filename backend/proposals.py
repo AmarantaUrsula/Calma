@@ -14,8 +14,8 @@ from . import llm, rules_extractor
 from .db import audit
 from .rules_extractor import RULE_DEFAULTS, RULE_FIELDS
 
-_JSON = {"states", "extra_questions"}
-_BOOL = {"requires_travel", "no_insurance_only"}
+_JSON = {"states", "extra_questions", "income_waiver_categories"}
+_BOOL = {"requires_travel", "no_insurance_only", "exclude_medicaid_covered"}
 
 
 def row_to_rules(r: sqlite3.Row | dict) -> dict:

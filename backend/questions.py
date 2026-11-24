@@ -28,6 +28,7 @@ CATALOG: dict[str, tuple[str, str]] = {
     "meal_days": ("optional", "Days needing meals while traveling"),
     "childcare_days": ("optional", "Days needing dependent care while traveling"),
     "insurance": ("optional", "Medicaid or other insurance that covers abortion?"),
+    "medicaid": ("optional", "Has Medicaid?"),
     "unhoused": ("optional", "Currently unhoused?"),
     "judicial_bypass": ("optional", "Minor seeking a judicial bypass?"),
     "contact": ("optional", "Contact details: name, phone, email, how to reach you"),
@@ -47,6 +48,11 @@ def derived(rule: FundRule) -> set[str]:
         need.add("age")
     if rule.no_insurance_only:
         need.add("insurance")
+    if rule.exclude_medicaid_covered:
+        need.add("medicaid")
+    for cat in rule.income_waiver_categories:  # exceptions to the income limit need their question
+        if cat in ("unhoused", "judicial_bypass"):
+            need.add(cat)
     if rule.support_type == "practical":
         if rule.rate_per_mile_cents:
             need.add("travel_miles")
