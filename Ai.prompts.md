@@ -852,3 +852,11 @@ Suggested confirming with clinics which identifier they'd use.
 **Outcome:** slides.html now works with no internet connection. Downloaded reveal.js 5.1.0 (reset.css, reveal.css, reveal.js and its MIT license) from jsDelivr into `report-assets/vendor/reveal/`; `build_slides.py` now places them inside slides.html and refuses to build if any external resource is left in the page header. The font changed from Source Serif 4 (a web font) to a built-in serif (Iowan Old Style / Palatino / Georgia). File is 0.5 MB. Checked in the browser: reveal.js runs, all 10 slides load, zero requests leave the computer, and nothing overflows at 1280×720. README updated.
 
 ---
+
+## Prompt 64 — 2026-11-24
+
+> K one more favor. Just go ahead an put the password to the sign ins in the report and the slides. it's fine. the professor does not allow other documents to be uploaded so it has to be accessible next to the emails. The passsword is Vamosestarbien
+
+**Outcome:** Added the demo password next to the demo log-in emails: report section 1 "How to try it" box (replacing "given with the Canvas submission") and the slides' title slide (replacing the Canvas note; the three emails are now listed there too). Rebuilt report.html (still 15 pages) and slides.html, re-exported report.pdf, committed and pushed. Not verified against the live Render site (I don't sign in to the hosted app with real passwords), so worth logging in once to confirm it matches CALMA_DEMO_PASSWORD on Render. Note: the repo is public, so anyone can now sign in to the demo, including as admin; it holds only made-up data, and the password can be changed on Render after grading.
+
+---
