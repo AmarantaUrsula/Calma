@@ -150,7 +150,7 @@ Sending the demo to colleagues? Share [DEMO_GUIDE.md](DEMO_GUIDE.md) (fill in th
 
 18. **AI usage and spending limits:** every AI call is checked against a per-person limit (`CALMA_AI_USER_HOURLY_LIMIT`, default 30/hour) and a site-wide daily cap (`CALMA_AI_DAILY_CALL_LIMIT`, default 300/day), then recorded with its real input, cached and output tokens and its cost. Admin → **AI usage and spending limits** shows the totals.
 
-**Project report:** [report.html](report.html) is a single file with all images embedded; it prints at about 15 letter pages. To rebuild it after editing `report-assets/report_template.html`, run `cd report-assets && python3 build_report.py`.
+**Project report:** [report.html](report.html) is a single file with all images embedded; it prints at about 15 letter pages. To rebuild it after editing `report-assets/report_template.html`, run `cd report-assets && python3 build_report.py`. [report.pdf](report.pdf) is a print of it (Chrome → Print → Save as PDF, Letter, background graphics on); re-export it after editing the report.
 
 **Slide deck:** [slides.html](slides.html) is a 10-slide reveal.js deck with the screenshots and diagram embedded (reveal.js loads from a CDN, so presenting needs internet). Arrow keys move between slides; F goes full screen. To rebuild after editing `report-assets/slides_template.html`, run `cd report-assets && python3 build_slides.py`.
 

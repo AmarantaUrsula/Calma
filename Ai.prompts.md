@@ -825,6 +825,14 @@ Suggested confirming with clinics which identifier they'd use.
 
 > can I export the report as a word or pdf?
 
-**Outcome:** PDF, yes: made report.pdf (15 letter pages, 1.7 MB) from report.html with Chrome's print-to-PDF, the same way the page count is checked; links stay clickable. Not committed yet. Word isn't recommended: converting would lose the layout (diagrams drawn in SVG, side-by-side screenshots, table styling), and no converter is installed. To make the PDF yourself: open report.html in Chrome → Print → Save as PDF, Letter, margins Default, "Background graphics" on.
+**Outcome:** PDF, yes: made report.pdf (15 letter pages, 1.7 MB) from report.html with Chrome's print-to-PDF, the same way the page count is checked; links stay clickable. Word isn't recommended: converting would lose the layout (diagrams drawn in SVG, side-by-side screenshots, table styling), and no converter is installed. To make the PDF yourself: open report.html in Chrome → Print → Save as PDF, Letter, margins Default, "Background graphics" on.
+
+---
+
+## Prompt 61 — 2026-11-24
+
+> Yes, commit it
+
+**Outcome:** Committed and pushed report.pdf (15 pages) to the repo, next to report.html. README notes it's a print of report.html and should be re-exported after report edits.
 
 ---
