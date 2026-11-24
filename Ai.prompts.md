@@ -753,3 +753,11 @@ Suggested confirming with clinics which identifier they'd use.
 3. **"Your reference (optional)"** on the new-appointment form: the clinic's own appointment or chart number. It shows in the case list ("Your ref.") and on the case view, where it can be added or edited. **Clinic-only:** never in fund views, the patient page or AI calls, not written to the audit log, and included only in the clinic's own Excel downloads.
 - 1 new test (statuses, sort order, trimming, editing, another clinic can't edit, hidden from funds and patients, export columns by role); 96 pass. Checked in the browser: creating a link with a reference, sort order, filters, search, and the reference on the case view.
 - Updated README (step 20), DESIGN (decision 19), DEMO_GUIDE, and the report's clinic-portal screenshot and caption (still 15 pages).
+
+---
+
+## Prompt 53 — 2026-11-24
+
+> so should we put that last part about what's worth asking in the "next steps" part of the report?
+
+**Outcome:** Yes. Added the open questions to the report's first next step ("Pilot with one clinic…"): whether the clinic reference should be required and which number (appointment or chart), whether staff need to search by patient name, whether 24 hours is realistic for funds including weekends, and whether the case statuses match how staff talk. Report still prints at 15 pages.
