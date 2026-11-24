@@ -860,3 +860,11 @@ Suggested confirming with clinics which identifier they'd use.
 **Outcome:** Added the demo password next to the demo log-in emails: report section 1 "How to try it" box (replacing "given with the Canvas submission") and the slides' title slide (replacing the Canvas note; the three emails are now listed there too). Rebuilt report.html (still 15 pages) and slides.html, re-exported report.pdf, committed and pushed. Not verified against the live Render site (I don't sign in to the hosted app with real passwords), so worth logging in once to confirm it matches CALMA_DEMO_PASSWORD on Render. Note: the repo is public, so anyone can now sign in to the demo, including as admin; it holds only made-up data, and the password can be changed on Render after grading.
 
 ---
+
+## Prompt 65 — 2026-11-24
+
+> Go do git is up to date. Please give me the exact url i can give my professor fo the slides and the report so he can view them on his computer
+
+**Outcome:** Git is up to date (local main = GitHub, nothing uncommitted). GitHub's own file links show HTML as source code, and GitHub Pages isn't turned on for the repo, so gave links through raw.githack.com, a free service that serves files from a public GitHub repo as normal web pages: https://raw.githack.com/AmarantaUrsula/Calma/main/report.html and https://raw.githack.com/AmarantaUrsula/Calma/main/slides.html (checked: both return the exact files in the repo). Also gave the PDF link and the option of turning on GitHub Pages for official github.io links.
+
+---
