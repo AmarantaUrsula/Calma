@@ -812,3 +812,11 @@ Suggested confirming with clinics which identifier they'd use.
 **Outcome:** No: everything was already committed and pushed (local main matched GitHub, nothing uncommitted). Confirmed report.html, slides.html, README, DEMO_GUIDE and this log are all in the repo. Committed and pushed this log entry.
 
 ---
+
+## Prompt 59 — 2026-11-24
+
+> the professor gave this instruction - does this mean he wants an html link for the report and slides that are on render and that have the github repo link? If your github repo is not in your report and slide files, we cannot clone it and grade it, so do not forget.
+
+**Outcome:** No hosting needed: the instruction means the GitHub repo URL must appear inside report.html and slides.html, so graders can find and clone the repo. Checked: both files contain https://github.com/AmarantaUrsula/Calma (report: section 1 "Code" row; slides: title slide), and the repo is public (opens logged out; `git ls-remote` works without credentials). No changes besides this log entry.
+
+---
