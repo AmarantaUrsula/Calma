@@ -49,6 +49,10 @@ Based on the product description and flowchart (`design-flowchart.webp`).
     - **Excel:** a `.xlsx` with Report and Data sheets, de-identified and banded. Groups under 5 patients are flagged, and downloads are audit-logged.
     - **Report Builder agent:** turns a plain-English request into report *settings* only. It never sees data, its output is checked in code against the user's role, and the numbers come from the deterministic engine.
 
+18. **24-hour decision policy (2026-11-24):** clinics and funds decide each pledge within 24 hours of submission (configurable).
+    - **Patients:** a reminder that their text/email link is their status page, plus a "check back after [time]" note, then "all funds have answered", or "call the clinic" if a fund is late.
+    - **Staff:** "Decide by" and "Overdue" flags. Late pledges are flagged, never auto-decided.
+
 ## Guiding principle: the AI never decides who gets money
 
 Eligibility and pledge amounts must be **deterministic, auditable rules**, not LLM output. These decisions move real money for a vulnerable population. Every result must be explainable ("matched because: lives in TX, income ≤ 200% FPL"), and the same input must always give the same answer. So the **matching engine is plain Python code, not an agent**. Agents go where language is the hard part: turning messy fund policies into rules, explaining things in plain words, and summarizing cases for staff.

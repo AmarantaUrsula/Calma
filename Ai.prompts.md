@@ -698,3 +698,16 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 - **Report images:** re-took the three screenshots that showed the old name (patient results, clinic portal, clinic case view). The clinic-portal screenshot replaces the user's, which showed the old name. The flowchart (its "Approves justice/internal funds" box) is redrawn as an inline diagram with the same layout and colors: "Approves patient assistance funds", and fund criteria "Funds edit; AI suggests".
 - `git grep` finds no "justice" in the app or docs. The only mentions left are in `Ai.prompts.md` (verbatim earlier prompts) and the original `design-flowchart.webp` reference image, which isn't used by the app or the report.
 - 94 tests pass; the report still prints at 15 pages.
+
+---
+
+## Prompt 49 — 2026-11-24
+
+> I wonder if there can be a prompt after the patient has seen the funds they are eligible for to remind them that the text or email link they were sent is the one they should visit to see updates on their funding status. Let's also have a policy that they funds will approve or not their pledge within 24 hours so we can also show patients a note that they can check back with a final determination within 24 hours? What do you think?
+
+**Outcome:** Agreed: both are good ideas. Built them, with one guardrail: a missed deadline flags the pledge as **overdue** but never approves or declines it automatically, because money decisions stay with people.
+- **Patient reminder** (English/Spanish): right after seeing their funds, a highlighted card says "Keep the link we sent you". It explains that the link they got by **text** or **email** (matching how the clinic sent it) is their status page and can be bookmarked, with a "Got it" button.
+- **Decision note:** a lasting "How to see updates" note on the status page says "Funds answer within 24 hours. Check back after Tuesday, November 24 at 8:44 PM for a final answer." It changes to "All funds have answered" when everyone has decided, or asks them to call the clinic if a fund is late.
+- **Policy setting:** `CALMA_DECISION_HOURS` (default 24). The API returns each pledge's `decide_by` and `overdue`.
+- **Staff:** every waiting pledge shows "Decide by Tue, Nov 24, 8:44 PM", then a red "Overdue" badge after 24 hours. Fund summary shows "Please decide within 24 hours" or the overdue count.
+- Docs updated (README step 19, DESIGN decision 18, DEMO_GUIDE, report Figure 8 caption). 1 new test; 95 pass. Checked in the browser: the reminder in English and Spanish, "Got it" hiding the card while the note stays, and the fund's "Decide by" badge.

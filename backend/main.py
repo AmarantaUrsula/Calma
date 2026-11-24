@@ -256,7 +256,7 @@ def pledge_rows(db: sqlite3.Connection, where: str, params: tuple) -> list[sqlit
     return db.execute(
         f"""SELECT p.*, f.name AS fund_name, f.kind AS fund_kind, c.clinic_id, c.appointment_date,
                    c.procedure_cost, c.status AS case_status, c.state, c.household_size,
-                   c.monthly_income, c.gestational_weeks, c.needs_travel, cl.name AS clinic_name
+                   c.monthly_income, c.gestational_weeks, c.needs_travel, c.submitted_at, cl.name AS clinic_name
             FROM pledges p
             JOIN funds f ON f.id = p.fund_id
             JOIN cases c ON c.id = p.case_id
@@ -267,8 +267,27 @@ def pledge_rows(db: sqlite3.Connection, where: str, params: tuple) -> list[sqlit
     ).fetchall()
 
 
+# Decision policy: clinics and funds approve or decline each pledge within this many hours of the
+# patient submitting the form. Shown to patients ("check back by...") and to staff ("decide by...").
+# Pledges past the deadline are flagged as overdue; they are never approved or declined automatically.
+def decision_hours() -> int:
+    return int(os.environ.get("CALMA_DECISION_HOURS", "24"))
+
+
+def decide_by(submitted_at: str | None) -> str | None:
+    if not submitted_at:
+        return None
+    return (datetime.fromisoformat(submitted_at) + timedelta(hours=decision_hours())).isoformat(timespec="seconds")
+
+
+def is_overdue(status: str, submitted_at: str | None) -> bool:
+    due = decide_by(submitted_at)
+    return status == "pending" and due is not None and clock.now() > datetime.fromisoformat(due)
+
+
 def pledge_out(p: sqlite3.Row) -> dict:
     return {
+        "decide_by": decide_by(p["submitted_at"]), "overdue": is_overdue(p["status"], p["submitted_at"]),
         "id": p["id"], "case_id": p["case_id"], "case_ref": case_ref(p["case_id"]),
         "fund_id": p["fund_id"], "fund_name": p["fund_name"], "fund_kind": p["fund_kind"],
         "suggested_amount": p["suggested_amount"], "approved_amount": p["approved_amount"],
@@ -496,6 +515,11 @@ def patient_view(token: str, db: sqlite3.Connection = Depends(get_db)) -> dict:
         "practical_approved": sum(x["amount"] for x in prac if x["status"] in ("approved", "paid")),
         "practical_pending": sum(x["amount"] for x in prac if x["status"] == "pending"),
         "states": US_STATES,
+        "contact_method": c["contact_method"],
+        "decision_hours": decision_hours(),
+        "decide_by": decide_by(c["submitted_at"]),
+        "any_pending": any(x["status"] == "pending" for x in shown),
+        "overdue": any(x["status"] == "pending" for x in shown) and is_overdue("pending", c["submitted_at"]),
     }
     if not c["submitted_at"]:
         out["questions"] = question_plan(db, c["clinic_id"])[0]
@@ -774,7 +798,9 @@ def fund_summary(user: User = Depends(require("fund")), db: sqlite3.Connection =
     ).fetchall()
     crit = approved_rules(db, [user.fund_id])
     used = fund_month_used(db, user.fund_id)
+    pend = pledge_rows(db, f"{FUND_DECIDE_SCOPE} AND p.status = 'pending'", (user.fund_id, user.fund_id))
     return {
+        "overdue": sum(1 for p in pend if is_overdue(p["status"], p["submitted_at"])), "decision_hours": decision_hours(),
         "fund": dict(f), "partner_clinics": [dict(c) for c in clinics],
         "monthly_budget": f["monthly_limit"], "approved_this_month": used,
         "criteria": crit[0].__dict__ if crit else None,

@@ -134,3 +134,28 @@ def test_auth_and_expiry(client):
     clock.freeze(datetime(2026, 11, 26, tzinfo=timezone.utc))
     r = client.get(f"/api/p/{tok}")
     assert r.status_code == 410 and r.json()["detail"]["clinic_phone"]
+
+
+def test_24_hour_decision_policy(client):
+    rosa, sam = login(client, 1), login(client, 3)
+    case = book(client, rosa)
+    tok = case["patient_path"].split("/")[-1]
+    v = client.post(f"/api/p/{tok}/screening", json={
+        "state": "TX", "household_size": 2, "monthly_income": 1500, "gestational_weeks": 8,
+        "needs_travel": False, "insurance_coverage": "no", "age": 30}).json()
+    # submitted at the frozen clock (2026-11-22 15:00 UTC) -> answers due by 2026-11-23 15:00
+    assert v["decide_by"].startswith("2026-11-23T15:00") and v["decision_hours"] == 24
+    assert v["any_pending"] and not v["overdue"] and v["contact_method"] == "text"
+    item = client.get("/api/fund/pledges", headers=sam).json()[0]
+    assert item["decide_by"].startswith("2026-11-23T15:00") and not item["overdue"]
+
+    clock.freeze(datetime(2026, 11, 23, 16, 0, tzinfo=timezone.utc))  # 25 hours later
+    sam = login(client, 3)
+    assert client.get(f"/api/p/{tok}").json()["overdue"] is True
+    assert client.get("/api/fund/pledges", headers=sam).json()[0]["overdue"] is True
+    assert client.get("/api/fund/summary", headers=sam).json()["overdue"] == 1
+    # deciding clears it; nothing is ever decided automatically
+    client.post(f"/api/fund/pledges/{item['id']}/decide", headers=sam, json={"decision": "approve"})
+    assert client.get("/api/fund/pledges", headers=sam).json()[0]["overdue"] is False
+    statuses = {p["status"] for p in client.get(f"/api/p/{tok}").json()["pledges"]}
+    assert "pending" in statuses  # the clinic's own pledge still waits for a person

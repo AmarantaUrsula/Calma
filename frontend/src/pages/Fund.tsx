@@ -3,18 +3,18 @@ import { api, errText, money } from "../api";
 import FundRules, { ConfirmBanner, RulesView } from "./FundRules";
 import { FundPartnerships } from "./Partnerships";
 import Reports from "./Reports";
-import { answerRows, Badge, DecisionControls, StaffShell } from "./Staff";
+import { answerRows, Badge, DecisionControls, DueBadge, StaffShell } from "./Staff";
 
 type Item = {
   id: number; case_ref: string; fund_name: string; fund_kind: string; suggested_amount: number;
   approved_amount: number | null; status: string; reasons: string[]; clinic_name: string;
   appointment_date: string; case_status: string; state: string; household_size: number; income_fpl_pct: number;
-  category: "procedure" | "practical"; answers: Record<string, unknown>;
+  category: "procedure" | "practical"; answers: Record<string, unknown>; decide_by: string | null; overdue: boolean;
 };
 type Summary = {
   fund: { name: string; description: string };
   partner_clinics: { id: number; name: string; city: string; state: string; phone: string }[];
-  monthly_budget: number | null; approved_this_month: number;
+  monthly_budget: number | null; approved_this_month: number; overdue: number; decision_hours: number;
   criteria: { states: string[]; income_max_fpl_pct: number | null; gest_min_weeks: number | null;
     gest_max_weeks: number | null; requires_travel: boolean; max_age: number | null;
     pledge_kind: string; pledge_value: number; pledge_cap: number | null; state_basis: string;
@@ -55,7 +55,8 @@ export default function Fund() {
           {s.monthly_budget != null && <div className="meter"><div style={{ width: `${Math.min(100, (s.approved_this_month / s.monthly_budget) * 100)}%` }} /></div>}
           <div className="muted small">You check the budget yourself before approving. Calma doesn't approve anything automatically.</div>
         </div>
-        <div className="stat"><div className="muted small">Eligible patients waiting</div><div className="stat-num">{pending.length}</div></div>
+        <div className="stat"><div className="muted small">Eligible patients waiting</div><div className="stat-num">{pending.length}</div>
+          <div className={`small ${s.overdue ? "error" : "muted"}`}>{s.overdue ? `${s.overdue} past the ${s.decision_hours}-hour decision policy` : `Please decide within ${s.decision_hours} hours`}</div></div>
         <div className="stat"><div className="muted small">You owe clinics (visit done)</div><div className="stat-num">{money(owedNow.reduce((n, i) => n + (i.approved_amount ?? 0), 0))}</div></div>
         <div className="stat"><div className="muted small">Partner clinics</div><div className="small">{s.partner_clinics.map((p) => `${p.name} (${p.state})`).join(", ")}</div></div>
       </div>
@@ -100,7 +101,7 @@ export default function Fund() {
               <div className="pledge-head">
                 <strong className="mono">{i.case_ref}</strong>
                 <span className="muted small">{i.clinic_name} · visit {i.appointment_date}</span>
-                <span className="right">suggested {money(i.suggested_amount)}</span>
+                <span className="right"><DueBadge decideBy={i.decide_by} overdue={i.overdue} /> suggested {money(i.suggested_amount)}</span>
               </div>
               <div className="small muted">
                 {i.category === "practical" && <span className="badge screened">Travel/practical help</span>}{" "}

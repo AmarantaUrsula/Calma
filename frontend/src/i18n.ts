@@ -114,6 +114,13 @@ const en = {
   practicalNote: "This help is for your trip, not the clinic bill.",
   visitHelpTitle: "Help with your visit cost",
   travelFund: "Travel help",
+  keepLinkTitle: "Keep the link we sent you",
+  keepLinkText: (method: string) => `This page is your status page. To check for updates, open the link we sent you by ${method === "email" ? "email" : "text message"}. You can also bookmark this page.`,
+  gotIt: "Got it",
+  updatesTitle: "How to see updates",
+  decisionNote: (hours: number, when: string) => `Funds answer within ${hours} hours. Check back after ${when} for a final answer.`,
+  overdueNote: "Some funds are taking longer than usual. Please call the clinic:",
+  allDecided: "All funds have answered. These are your final amounts.",
 };
 
 const es: typeof en = {
@@ -227,6 +234,13 @@ const es: typeof en = {
   practicalNote: "Esta ayuda es para su viaje, no para la cuenta de la clínica.",
   visitHelpTitle: "Ayuda con el costo de su cita",
   travelFund: "Ayuda para viajar",
+  keepLinkTitle: "Guarde el enlace que le enviamos",
+  keepLinkText: (method: string) => `Esta página muestra el estado de su ayuda. Para ver novedades, abra el enlace que le enviamos por ${method === "email" ? "correo electrónico" : "mensaje de texto"}. También puede guardar esta página en sus favoritos.`,
+  gotIt: "Entendido",
+  updatesTitle: "Cómo ver novedades",
+  decisionNote: (hours: number, when: string) => `Los fondos responden en un plazo de ${hours} horas. Vuelva a revisar después del ${when} para tener una respuesta final.`,
+  overdueNote: "Algunos fondos están tardando más de lo normal. Por favor llame a la clínica:",
+  allDecided: "Todos los fondos respondieron. Estas son las cantidades finales.",
 };
 
 export const STRINGS = { en, es };

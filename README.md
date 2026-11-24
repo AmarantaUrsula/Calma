@@ -139,6 +139,10 @@ Sending the demo to colleagues? Share [DEMO_GUIDE.md](DEMO_GUIDE.md) (fill in th
     - **Download Excel:** a `.xlsx` file with a **Report** sheet (the filters and totals) and a **Data** sheet (one de-identified row per pledge: case number, bands instead of exact income, age or weeks; no names or contact details). Groups with fewer than 5 patients are flagged, and every download is recorded in the audit log.
     - **Demo history:** demo data now includes 90 made-up past cases over six months, so the reports have something to show.
 
+19. **24-hour decision policy:** clinics and funds approve or decline each pledge within 24 hours of the patient submitting (`CALMA_DECISION_HOURS`).
+    - **Patients:** right after seeing their funds, a reminder says the link they were sent by text or email is their status page, and that funds answer within 24 hours ("check back after Tuesday 8:44 PM for a final answer"). The note updates to "all funds have answered", or, if a fund is late, asks them to call the clinic.
+    - **Staff:** each waiting pledge shows "Decide by…", then a red "Overdue" flag after 24 hours. Nothing is ever approved or declined automatically.
+
 18. **AI usage and spending limits:** every AI call is checked against a per-person limit (`CALMA_AI_USER_HOURLY_LIMIT`, default 30/hour) and a site-wide daily cap (`CALMA_AI_DAILY_CALL_LIMIT`, default 300/day), then recorded with its real input, cached and output tokens and its cost. Admin → **AI usage and spending limits** shows the totals.
 
 **Project report:** [report.html](report.html) is a single file with all images embedded; it prints at about 15 letter pages. To rebuild it after editing `report-assets/report_template.html`, run `cd report-assets && python3 build_report.py`.

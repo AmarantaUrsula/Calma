@@ -285,3 +285,14 @@ h2.sub { margin-top: 14px; }
 .table-toggle { margin-top: 14px; }
 .report-table td:first-child { font-weight: 500; }
 .pie-wrap > p { flex-basis: 100%; margin: 0; }
+
+/* ---------- patient: status reminders ---------- */
+.keep-link { border: 2px solid var(--accent); background: var(--accent-wash); }
+.keep-link h2 { margin-top: 0; }
+.keep-link p { font-size: 17px; }
+.updates-note { margin-top: 14px; }
+.updates-note p { margin: 6px 0 0; }
+
+.badge.due { color: var(--muted); border-color: var(--line); font-weight: 600; }
+.badge.overdue { color: #fff; background: var(--red); border-color: var(--red); }
+.due-row { flex-basis: 100%; }

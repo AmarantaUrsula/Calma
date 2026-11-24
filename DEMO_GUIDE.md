@@ -40,7 +40,7 @@ You can also **create your own account** ("Create an account" on the login page)
    - **Age:** 17
    - **Travel:** yes, 300 miles, 2 nights, 2 days of meals, 1 day of childcare
    - **Insurance:** no
-3. See the results: each fund with its amount and "Waiting for an answer", what the visit costs, what the patient may still owe, and travel help in its own section. The clinic's phone number is always at the bottom. This page is the patient's status page; it updates as funds decide.
+3. See the results: each fund with its amount and "Waiting for an answer", what the visit costs, what the patient may still owe, and travel help in its own section. The clinic's phone number is always at the bottom. Right after submitting, the patient is reminded that the link they were texted or emailed is their status page, and that funds answer within 24 hours, with a "check back after…" time. Funds and clinics see a "Decide by" time on each waiting pledge, and a red "Overdue" flag if they miss it.
 
 ### 2. Funds and clinics decide (5 min)
 1. As **Rosa**, click the new case. You'll see every answer, each matched fund with the reasons it matched, and funds that didn't match and why. **Approve** the Mesa Patient Assistance Fund pledge and watch the monthly budget go down.

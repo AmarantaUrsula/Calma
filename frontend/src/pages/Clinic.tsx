@@ -3,11 +3,12 @@ import { api, errText, money } from "../api";
 import FundRules, { ConfirmBanner, RulesView } from "./FundRules";
 import { ClinicPartnerships, Partnership } from "./Partnerships";
 import Reports from "./Reports";
-import { answerRows, Badge, DecisionControls, StaffShell } from "./Staff";
+import { answerRows, Badge, DecisionControls, DueBadge, StaffShell } from "./Staff";
 
 type Pledge = {
   id: number; case_ref: string; fund_name: string; fund_kind: string; suggested_amount: number;
   approved_amount: number | null; status: string; reasons: string[]; category: "procedure" | "practical";
+  decide_by: string | null; overdue: boolean;
 };
 type Case = {
   id: number; case_ref: string; appointment_date: string; procedure_cost: number; status: string;
@@ -231,6 +232,7 @@ function CaseDetail({ id, onChange }: { id: number; onChange: () => void }) {
             <strong>{p.fund_name}</strong>
             <span className="muted small">{p.fund_kind === "clinic" ? "your fund" : "partner fund"}{p.category === "practical" && " · travel/practical help (paid to patient, not the bill)"}</span>
             <span className="right">{money(p.approved_amount ?? p.suggested_amount)} <Badge status={p.status} /></span>
+            {p.status === "pending" && <span className="due-row"><DueBadge decideBy={p.decide_by} overdue={p.overdue} /></span>}
           </div>
           <ul className="reasons">{p.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
           {p.fund_kind === "clinic" && p.status === "pending" && (

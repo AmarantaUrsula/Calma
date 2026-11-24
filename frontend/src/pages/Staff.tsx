@@ -94,3 +94,12 @@ export function answerRows(a: Record<string, unknown>): [string, string][] {
   ];
   return rows.filter(([, , present]) => present !== undefined && present !== null).map(([k, v]) => [k, v]);
 }
+
+/** "Decide by Tue 3:15 PM" for a pending pledge, or a red "Overdue" flag past the 24-hour policy. */
+export function DueBadge({ decideBy, overdue }: { decideBy: string | null; overdue: boolean }) {
+  if (!decideBy) return null;
+  const when = new Date(decideBy).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return overdue
+    ? <span className="badge overdue" title="Past the 24-hour decision policy">Overdue · was due {when}</span>
+    : <span className="badge due">Decide by {when}</span>;
+}

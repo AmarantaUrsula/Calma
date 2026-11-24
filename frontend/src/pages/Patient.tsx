@@ -10,6 +10,7 @@ type View = {
   submitted: boolean; procedure_cost: number; pledges: Pledge[];
   approved_total: number; pending_total: number; you_may_owe: number; states: string[];
   practical_approved: number; practical_pending: number; questions?: string[];
+  contact_method: "text" | "email"; decision_hours: number; decide_by: string | null; any_pending: boolean; overdue: boolean;
 };
 type YN = boolean | null;
 type Answers = {
@@ -45,6 +46,7 @@ export default function Patient({ token }: { token: string }) {
   const [lang, setLang] = useState<Lang | null>(null);
   const [fatal, setFatal] = useState<{ kind: "expired" | "bad" | "error"; phone?: string; clinic?: string } | null>(null);
   const [stage, setStage] = useState<"lang" | "intro" | "form" | "done">("lang");
+  const [justSubmitted, setJustSubmitted] = useState(false);
 
   const load = async () => {
     try {
@@ -108,9 +110,10 @@ export default function Patient({ token }: { token: string }) {
         </div>
       )}
       {stage === "form" && (
-        <ScreeningForm t={t} lang={lang ?? "en"} states={view.states} questions={view.questions ?? []} token={token} onDone={(v) => { setView(v); setStage("done"); }} />
+        <ScreeningForm t={t} lang={lang ?? "en"} states={view.states} questions={view.questions ?? []} token={token} onDone={(v) => { setView(v); setStage("done"); setJustSubmitted(true); window.scrollTo(0, 0); }} />
       )}
-      {stage === "done" && <Results t={t} view={view} lang={lang ?? view.language} onRefresh={load} />}
+      {stage === "done" && <Results t={t} view={view} lang={lang ?? view.language} onRefresh={load}
+        justSubmitted={justSubmitted} onDismiss={() => setJustSubmitted(false)} />}
     </PatientShell>
   );
 }
@@ -411,7 +414,12 @@ function Question({ id, label, hint, children }: { id: string; label: string; hi
   );
 }
 
-function Results({ t, view, lang, onRefresh }: { t: Strings; view: View; lang: Lang; onRefresh: () => void }) {
+function Results({ t, view, lang, onRefresh, justSubmitted, onDismiss }: {
+  t: Strings; view: View; lang: Lang; onRefresh: () => void; justSubmitted: boolean; onDismiss: () => void;
+}) {
+  const when = view.decide_by
+    ? new Date(view.decide_by).toLocaleString(lang === "es" ? "es-US" : "en-US", { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })
+    : "";
   useEffect(() => {
     const id = setInterval(onRefresh, 30000);
     return () => clearInterval(id);
@@ -435,6 +443,15 @@ function Results({ t, view, lang, onRefresh }: { t: Strings; view: View; lang: L
     </ul>
   );
   return (
+    <>
+    {justSubmitted && view.pledges.length > 0 && (
+      <div className="card keep-link" role="status">
+        <h2>{t.keepLinkTitle}</h2>
+        <p>{t.keepLinkText(view.contact_method)}</p>
+        {view.any_pending && <p>{t.decisionNote(view.decision_hours, when)}</p>}
+        <button className="btn" onClick={onDismiss}>{t.gotIt}</button>
+      </div>
+    )}
     <div className="card">
       <h1>{view.pledges.length ? t.resultsTitle : t.noHelp}</h1>
       {!view.pledges.length && <p className="lead">{t.noHelpBody}</p>}
@@ -454,7 +471,15 @@ function Results({ t, view, lang, onRefresh }: { t: Strings; view: View; lang: L
         </>
       )}
       <p className="muted">{t.appointment}: <strong>{view.clinic_name}</strong>, {formatDate(view.appointment_date, lang)}</p>
-      <p className="note">{t.saveLink}</p>
+      <div className="note updates-note">
+        <strong>{t.updatesTitle}</strong>
+        <p>{t.keepLinkText(view.contact_method)}</p>
+        {view.pledges.length > 0 && (view.overdue
+          ? <p>{t.overdueNote} <a className="phone" href={`tel:${view.clinic_phone}`}>{view.clinic_phone}</a></p>
+          : view.any_pending ? <p>{t.decisionNote(view.decision_hours, when)}</p>
+          : <p>{t.allDecided}</p>)}
+      </div>
     </div>
+    </>
   );
 }
