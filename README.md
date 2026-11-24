@@ -152,6 +152,8 @@ Sending the demo to colleagues? Share [DEMO_GUIDE.md](DEMO_GUIDE.md) (fill in th
 
 **Project report:** [report.html](report.html) is a single file with all images embedded; it prints at about 15 letter pages. To rebuild it after editing `report-assets/report_template.html`, run `cd report-assets && python3 build_report.py`.
 
+**Slide deck:** [slides.html](slides.html) is a 10-slide reveal.js deck with the screenshots and diagram embedded (reveal.js loads from a CDN, so presenting needs internet). Arrow keys move between slides; F goes full screen. To rebuild after editing `report-assets/slides_template.html`, run `cd report-assets && python3 build_slides.py`.
+
 ## AI setup
 
 - The model comes from `OPENAI_MODEL` (default `gpt-5.6-luna`), through OpenAI's Responses API.
