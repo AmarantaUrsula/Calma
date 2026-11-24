@@ -85,8 +85,41 @@
 <div class="callout"><strong>In one paragraph.</strong> A patient books an abortion and gets a private link. On their phone, in English or Spanish, they answer a few plain-language questions (state, household, income, weeks pregnant, travel). Calma instantly checks those answers against the clinic's own fund and every partner abortion fund, shows the patient each possible pledge and what they may still owe, and sends each fund only the cases it is eligible for. Clinics and funds approve each pledge by hand and track what's owed. Two AI agents work in the background: one keeps each fund's eligibility rules up to date by reading the fund's website (a person approves every change), and one turns a plain-English request like "pie chart of money paid out by fund this year" into a report. <strong>The AI never decides who gets money.</strong> Plain, tested rules do that.</div>
 
 <figure class="tall">
-  {{img:flowchart.webp|Calma's flow, from booking to reimbursement}}
-  <figcaption>Figure 1. How Calma works. Purple = patient, green = clinic, red = fund, gray = shared system. The matching engine checks clinic funds first, then partner funds; each fund approves its own pledge.</figcaption>
+<svg viewBox="0 0 760 640" width="100%" style="max-width:560px;display:block;margin:0 auto;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-label="Calma flowchart">
+  <defs>
+    <marker id="fa" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#8a877f"/></marker>
+    <style>
+      .pt{fill:#eeeefc;stroke:#6b63c9}.cl{fill:#e3f4ee;stroke:#2f8a62}.fd{fill:#fbecea;stroke:#b85c45}.sy{fill:#f1efea;stroke:#9a968c}
+      .bt{font-size:17px;font-weight:600;text-anchor:middle}.bs{font-size:13.5px;text-anchor:middle}
+      .tpt{fill:#3d3a8c}.tcl{fill:#145c3f}.tfd{fill:#7a3524}.tsy{fill:#3b3a36}
+      .fl{stroke:#8a877f;stroke-width:2;fill:none;marker-end:url(#fa)}
+    </style>
+  </defs>
+  <rect x="20" y="20" width="320" height="70" rx="12" class="sy"/><text x="180" y="50" class="bt tsy">Appointment booked</text><text x="180" y="72" class="bs tsy">Online or by phone</text>
+  <rect x="420" y="20" width="320" height="70" rx="12" class="cl"/><text x="580" y="50" class="bt tcl">One-time unique link</text><text x="580" y="72" class="bs tcl">Sent by text or email</text>
+  <path d="M340 55 H416" class="fl"/>
+  <rect x="190" y="130" width="380" height="70" rx="12" class="pt"/><text x="380" y="160" class="bt tpt">Patient portal: screening form</text><text x="380" y="182" class="bs tpt">Income, household, location, travel</text>
+  <path d="M580 90 V110 H380 V126" class="fl"/>
+  <rect x="190" y="240" width="380" height="70" rx="12" class="sy"/><text x="380" y="270" class="bt tsy">Matching engine</text><text x="380" y="292" class="bs tsy">Clinic funds first, then partners</text>
+  <path d="M380 200 V236" class="fl"/>
+  <rect x="595" y="240" width="150" height="70" rx="12" class="fd"/><text x="670" y="268" class="bt tfd" style="font-size:15px">Fund criteria</text><text x="670" y="289" class="bs tfd" style="font-size:12px">Funds edit; AI suggests</text>
+  <path d="M595 275 H574" class="fl"/>
+  <rect x="20" y="350" width="330" height="70" rx="12" class="cl"/><text x="185" y="380" class="bt tcl">Clinic portal</text><text x="185" y="402" class="bs tcl">Approves patient assistance funds</text>
+  <rect x="410" y="350" width="330" height="70" rx="12" class="fd"/><text x="575" y="380" class="bt tfd">Fund portal</text><text x="575" y="402" class="bs tfd">Gets ping, approves pledge</text>
+  <path d="M320 310 V330 H185 V346" class="fl"/><path d="M440 310 V330 H575 V346" class="fl"/>
+  <rect x="190" y="460" width="380" height="70" rx="12" class="pt"/><text x="380" y="490" class="bt tpt">Patient sees pledge status</text><text x="380" y="512" class="bs tpt">Approved, pending, or completed</text>
+  <path d="M185 420 V440 H320 V456" class="fl"/><path d="M575 420 V440 H440 V456" class="fl"/>
+  <rect x="20" y="570" width="330" height="56" rx="12" class="sy"/><text x="185" y="594" class="bt tsy">Appointment day</text><text x="185" y="614" class="bs tsy">Patient pays remaining balance</text>
+  <rect x="410" y="570" width="330" height="56" rx="12" class="sy"/><text x="575" y="594" class="bt tsy">Reimbursement</text><text x="575" y="614" class="bs tsy">Clinic and fund see pledges owed</text>
+  <path d="M320 530 V550 H185 V566" class="fl"/><path d="M440 530 V550 H575 V566" class="fl"/>
+</svg>
+<div style="display:flex;gap:18px;justify-content:center;font-size:9.5pt;color:#66655c;margin-top:4px">
+  <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#eeeefc;border:1px solid #6b63c9;vertical-align:-1px"></span> Patient</span>
+  <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#e3f4ee;border:1px solid #2f8a62;vertical-align:-1px"></span> Clinic</span>
+  <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#fbecea;border:1px solid #b85c45;vertical-align:-1px"></span> Fund</span>
+  <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#f1efea;border:1px solid #9a968c;vertical-align:-1px"></span> System / shared</span>
+</div>
+  <figcaption>Figure 1. How Calma works (redrawn from the original project flowchart). The matching engine checks the clinic's own patient assistance fund first, then partner funds; each fund approves its own pledge. Fund criteria are kept current by funds themselves, with AI-suggested updates that a person approves.</figcaption>
 </figure>
 
 <!-- ============================== 2. MOTIVATION ============================== -->
@@ -221,8 +254,8 @@
 <h3>What the rest of the app looks like</h3>
 <p>The agents support the main flow, which uses no AI. A clinic creates a link (Figure 6); the patient answers one question per screen (Figure 7); Calma shows the patient every possible pledge (Figure 8); the clinic sees every answer with the reasons each fund matched, and each fund sees only what it needs (Figure 9).</p>
 <figure>
-  {{img:user-shot-4.jpg|Clinic portal}}
-  <figcaption>Figure 6. Clinic portal (Rosa at Mesa Women's Health, demo). The clinic's own fund budget, a new appointment with its private patient link, and the case list.</figcaption>
+  {{img:clinic-portal.jpg|Clinic portal}}
+  <figcaption>Figure 6. Clinic portal (Rosa at Mesa Women's Health, demo). The clinic's own patient assistance fund budget, a new appointment with its private patient link, and the case list.</figcaption>
 </figure>
 <figure class="pair">
   <div>{{img:user-shot-1.jpg|Language choice}}</div>

@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS clinics (
     phone TEXT NOT NULL
 );
 
--- kind = 'clinic' (a clinic's own justice/internal fund, a block grant with a
+-- kind = 'clinic' (a clinic's own patient assistance fund, a block grant with a
 -- monthly limit) or 'independent' (an outside abortion fund that partners with
 -- several clinics).
 CREATE TABLE IF NOT EXISTS funds (

@@ -79,7 +79,7 @@ Sending the demo to colleagues? Share [DEMO_GUIDE.md](DEMO_GUIDE.md) (fill in th
 2. Under **New appointment**, click **Create link**, then **Open patient link**.
 3. As the patient: pick English or Español and answer the 6 questions. Try Texas, 3 people, $2,000/month, 16 weeks, needs travel, age 22.
 4. The results page shows each fund as *Waiting for an answer*, plus the amount the patient may owe and the clinic's phone number.
-5. Back as Rosa: click the case and approve the **Mesa Justice Fund** pledge. Watch the monthly limit go down.
+5. Back as Rosa: click the case and approve the **Mesa Patient Assistance Fund** pledge. Watch the monthly limit go down.
 6. Log out, then log in as Sam (`sam@desertbloom.example.org`). The patient shows up under *Needs decision*; approve it.
 7. The patient's page now shows *Approved* for both. Mark the visit done as Rosa. Sam then sees *Owed to clinic* and clicks **Mark paid**.
 8. **Admin** shows every fund's rules and the audit log.

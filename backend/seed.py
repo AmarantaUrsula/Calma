@@ -23,7 +23,7 @@ CLINICS = [
 
 # id, name, kind, owner_clinic_id, monthly_limit, description
 FUNDS = [
-    (1, "Mesa Justice Fund", "clinic", 1, 6000, "Mesa's own fund. Covers up to half the cost, max $300."),
+    (1, "Mesa Patient Assistance Fund", "clinic", 1, 6000, "Mesa's own fund. Covers up to half the cost, max $300."),
     (2, "Prairie Patient Assistance Fund", "clinic", 2, 4000, "Prairie's own fund. Covers up to half the cost, max $250."),
     (3, "Desert Bloom Fund", "independent", None, 8000, "Fictional fund for TX, NM and AZ residents."),
     (4, "Heartland Access Fund", "independent", None, 5000, "Fictional fund for KS, MO and OK residents."),

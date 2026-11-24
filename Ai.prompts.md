@@ -686,3 +686,15 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 - **Figures:** the user's flowchart; the user's four screenshots (language choice, welcome screen, income question, clinic portal); 11 new screenshots from a real run (website checks, Carolina review, Report Builder and chart, patient results, clinic case, fund card, AI usage, the injection test); and an agent pipeline diagram (SVG).
 - **Fixes along the way:** pydantic-ai's `usage` is a property here, not a method; a test leaked a login lockout into later tests (now reset between tests).
 - **Files:** `report-assets/` holds the template, the build script (`build_report.py`) and the images. 94 tests pass.
+
+---
+
+## Prompt 48 — 2026-11-23
+
+> Let's make some tweaks. Can you remove any reference to "justice funds" if there are any in the app? just call it patient assistance fund or something else
+
+**Outcome:** Removed every "justice" reference from the app and report.
+- **Renamed** the demo clinic fund "Mesa Justice Fund" to **"Mesa Patient Assistance Fund"** (Prairie's was already "Prairie Patient Assistance Fund"). Updated: demo data (`seed.py`), a code comment (`db.py`), tests, README, DEMO_GUIDE, the report text, and the current demo database (in place, without wiping it).
+- **Report images:** re-took the three screenshots that showed the old name (patient results, clinic portal, clinic case view). The clinic-portal screenshot replaces the user's, which showed the old name. The flowchart (its "Approves justice/internal funds" box) is redrawn as an inline diagram with the same layout and colors: "Approves patient assistance funds", and fund criteria "Funds edit; AI suggests".
+- `git grep` finds no "justice" in the app or docs. The only mentions left are in `Ai.prompts.md` (verbatim earlier prompts) and the original `design-flowchart.webp` reference image, which isn't used by the app or the report.
+- 94 tests pass; the report still prints at 15 pages.

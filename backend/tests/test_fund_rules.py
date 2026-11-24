@@ -110,7 +110,7 @@ def test_clinic_edits_own_fund_only(client):
     c, _ = client
     rosa = login(c, 1)  # Mesa clinic, owns fund 1
     v = c.get("/api/clinic/funds/1/rules", headers=rosa).json()
-    assert v["fund_name"] == "Mesa Justice Fund" and v["rules"]["pledge_cap"] == 300 and v["monthly_limit"] == 6000
+    assert v["fund_name"] == "Mesa Patient Assistance Fund" and v["rules"]["pledge_cap"] == 300 and v["monthly_limit"] == 6000
     assert c.get("/api/clinic/funds/2/rules", headers=rosa).status_code == 404   # Prairie's fund
     assert c.get("/api/clinic/funds/3/rules", headers=rosa).status_code == 404   # a partner fund
     assert c.get("/api/clinic/funds/1/rules", headers=login(c, 3)).status_code == 403  # fund staff
@@ -121,7 +121,7 @@ def test_clinic_edits_own_fund_only(client):
     case = c.post("/api/clinic/cases", headers=rosa, json={"appointment_date": "2026-11-30", "procedure_cost": 1000, "contact_method": "text"}).json()
     tok = case["patient_path"].split("/")[-1]
     out = c.post(f"/api/p/{tok}/screening", json={"state": "NM", "household_size": 1, "monthly_income": 1000, "gestational_weeks": 8, "needs_travel": False}).json()
-    assert next(p for p in out["pledges"] if p["fund_name"] == "Mesa Justice Fund")["amount"] == 400
+    assert next(p for p in out["pledges"] if p["fund_name"] == "Mesa Patient Assistance Fund")["amount"] == 400
 
     log = c.get("/api/admin/audit", headers=login(c, 8)).json()
     assert any(e["action"] == "rules_updated_by_clinic" for e in log)

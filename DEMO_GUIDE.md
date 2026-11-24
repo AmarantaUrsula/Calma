@@ -43,7 +43,7 @@ You can also **create your own account** ("Create an account" on the login page)
 3. See the results: each fund with its amount and "Waiting for an answer", what the visit costs, what the patient may still owe, and travel help in its own section. The clinic's phone number is always at the bottom. This page is the patient's status page; it updates as funds decide.
 
 ### 2. Funds and clinics decide (5 min)
-1. As **Rosa**, click the new case. You'll see every answer, each matched fund with the reasons it matched, and funds that didn't match and why. **Approve** the Mesa Justice Fund pledge and watch the monthly budget go down.
+1. As **Rosa**, click the new case. You'll see every answer, each matched fund with the reasons it matched, and funds that didn't match and why. **Approve** the Mesa Patient Assistance Fund pledge and watch the monthly budget go down.
 2. In another window, log in as **Sam** (Desert Bloom). The patient is under **Needs decision**, showing only what this fund needs to know. **Approve** it, or change the amount.
 3. Reload the patient's page: the status changes to **Approved**, and "you may need to pay" goes down.
 4. Back as Rosa, **Mark visit done**. Sam then sees **Owed to clinic** and clicks **Mark paid**. Check **Reimbursement** on the clinic side.

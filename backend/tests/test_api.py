@@ -52,12 +52,12 @@ def test_full_flow(client):
     r = client.post(f"/api/p/{token}/screening", json=answers)
     assert r.status_code == 200, r.text
     names = {p["fund_name"]: p for p in r.json()["pledges"]}
-    # Mesa Justice (clinic) + Desert Bloom (TX, no insurance) + Later Care (16 wks) + Enchanted Circle (care in NM)
+    # Mesa Patient Assistance (clinic) + Desert Bloom (TX, no insurance) + Later Care (16 wks) + Enchanted Circle (care in NM)
     # + Open Road practical help. Not Youth (age 22).
-    assert set(names) == {"Mesa Justice Fund", "Desert Bloom Fund", "Open Road Travel Fund", "Later Care Fund",
+    assert set(names) == {"Mesa Patient Assistance Fund", "Desert Bloom Fund", "Open Road Travel Fund", "Later Care Fund",
                           "Enchanted Circle Care Fund"}
     assert all(p["status"] == "pending" for p in names.values())
-    assert names["Mesa Justice Fund"]["amount"] == 300
+    assert names["Mesa Patient Assistance Fund"]["amount"] == 300
     # practical: 400 round-trip miles x $0.20 + 1 night x $90 + 2 days meals x $25 = $220, separate from the bill
     assert names["Open Road Travel Fund"]["amount"] == 220 and names["Open Road Travel Fund"]["category"] == "practical"
 
