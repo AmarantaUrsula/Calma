@@ -784,3 +784,13 @@ Suggested confirming with clinics which identifier they'd use.
 **Outcome:** Kept the exception amount as is: unhoused patients and minors seeking a judicial bypass get 100% of the cost from the clinic fund, up to $600 (Mesa) / $500 (Prairie). Each clinic can still change it in its rules editor. No code change; DESIGN decision 20 updated to say it's decided.
 
 ---
+
+## Prompt 56 — 2026-11-24
+
+> Ok let's make sure our report tells graders how to access the site. Please make sure the report is up to date, still aligns with these requirements (see images). Do you think we should put in part one instructions about how to sign in as a clinic worker, fund worker, admin,  and instructions about how to generate a patient link so they can easily test the site?
+>
+> [Images: the report requirements table, sections 1–8 (Title + links, Motivation, What is new here, The agents, Tokenomics, Safety, Impact, Limits + next steps) and the page-count note]
+
+**Outcome:** Yes, added a **"How to try it (about 10 minutes)"** box to section 1 of the report: the live link, the three demo log-ins (clinic worker Rosa, fund worker Sam at Desert Bloom, admin), and four steps (make a patient link, be the patient in a private window, approve as clinic and fund, try the two AI agents). The password is **not** printed: the report is in the public GitHub repo, so the box says it's given with the Canvas submission. Brought the report up to date: 99 tests (was 94); section 7 now reports the real tester and the five changes their feedback led to (statuses, sorting, clinic reference, income-limit exceptions, Medicaid rule) instead of "not yet tried by a real user"; section 4 lists the new rule fields; section 8 adds the Medicaid-list limit. Checked all 8 required sections are still there. Trimmed wording and set the Sources list smaller in print to stay at **15 pages**.
+
+---
