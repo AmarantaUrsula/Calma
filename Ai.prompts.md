@@ -711,3 +711,11 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 - **Policy setting:** `CALMA_DECISION_HOURS` (default 24). The API returns each pledge's `decide_by` and `overdue`.
 - **Staff:** every waiting pledge shows "Decide by Tue, Nov 24, 8:44 PM", then a red "Overdue" badge after 24 hours. Fund summary shows "Please decide within 24 hours" or the overdue count.
 - Docs updated (README step 19, DESIGN decision 18, DEMO_GUIDE, report Figure 8 caption). 1 new test; 95 pass. Checked in the browser: the reminder in English and Spanish, "Got it" hiding the card while the note stays, and the fund's "Decide by" badge.
+
+---
+
+## Prompt 50 — 2026-11-24
+
+> Let's replace the patient question "About how much money does your home get?" with "What is your household's total income?" keep the same prompts below. Translate for the Spanish if necessary. Thanks.
+
+**Outcome:** Changed the patient income question to **"What is your household's total income?"**; in Spanish, **"¿Cuál es el ingreso total de su hogar?"**. The hint below ("Add up pay from jobs and any other money. A guess is OK." / "Sume el pago de trabajos y cualquier otro dinero. Está bien adivinar.") and the "each month / each year" choice are unchanged. The older monthly-only version of the question was updated to match. Checked in the browser in English and Spanish. Swapped the report's income-question screenshot for one showing the new wording (report still 15 pages).
