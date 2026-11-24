@@ -720,3 +720,21 @@ README and DESIGN updated. 72 tests pass. Checked both notices in the browser (p
 
 **Outcome:** Changed the patient income question to **"What is your household's total income?"**; in Spanish, **"¿Cuál es el ingreso total de su hogar?"**. The hint below ("Add up pay from jobs and any other money. A guess is OK." / "Sume el pago de trabajos y cualquier otro dinero. Está bien adivinar.") and the "each month / each year" choice are unchanged. The older monthly-only version of the question was updated to match. Checked in the browser in English and Spanish. Swapped the report's income-question screenshot for one showing the new wording (report still 15 pages).
 - Follow-up fix: the new full-phone screenshot pushed the report to 16 pages. Cropped it to the question card and capped that row's image height, so the report is back to 15 pages.
+
+---
+
+## Prompt 51 — 2026-11-24
+
+> Here is some feedback from someone who tested the site. I don't have a strong opinion on this or a great solution yet. Do you have thoughts? totally fine if not, it might be something we would consult clinics directly on. But if you have ideas let me know.
+>
+> *(Pasted tester feedback on question 3, "For clinic staff: does the case view give you what you need to approve quickly?":)*
+> * Status for case should probably be either "approved" "visit completed" or "pending approval"
+> * The pending approval cases should be at the top of the list.
+> * I wonder how a clinic would link their patient that they have the appointment for and the patient thought has completed this screening? I see that it generates a random patient identifying number, but I would assume there are clinics that would want to maybe enter their own number that links to the appointment that was created. That number doesn't have to be shown on the patient side but the clinic needs that information to be able to track who they're approving. Another option could be to have patients enter something like first name last initial so that when looked at with their gestation and date uh procedure the clinic would be able to tell who that case belongs to.
+
+**Outcome:** Shared recommendations (no code changes):
+1. **Clinic-friendly status labels** based on what's happening: Waiting for patient / Needs your approval / Waiting on funds / Ready (all decided) / Visit completed / Closed.
+2. **"Needs your approval" first,** overdue at the very top, then soonest appointment; plus quick filter tabs.
+3. **An optional "clinic reference" field** (appointment or chart number) entered when creating the link: clinic-only (never shown to patients, funds or the AI), searchable, and in clinic exports. Recommended over asking patients for a name. The existing optional clinic-only contact question (first name) can be a backup for clinics that want it.
+
+Suggested confirming with clinics which identifier they'd use.
