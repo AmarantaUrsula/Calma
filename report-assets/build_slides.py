@@ -1,6 +1,6 @@
 """Build ../slides.html from slides_template.html: embeds every screenshot as a data URI and
 inlines the agents diagram from the report, so the deck is one file that still works when emailed.
-(reveal.js itself loads from a CDN, so presenting needs an internet connection.)
+reveal.js (vendor/reveal/, MIT license) is inlined too, so the deck needs no internet connection.
 
     cd calma/report-assets && python3 build_slides.py
 """
@@ -33,7 +33,10 @@ def agents_svg() -> str:
 
 html = (HERE / "slides_template.html").read_text(encoding="utf-8")
 html = html.replace("{{svg:agents}}", agents_svg())
+html = re.sub(r"\{\{inline-css:([^}]+)\}\}", lambda m: "<style>\n" + (HERE / m.group(1)).read_text(encoding="utf-8") + "\n</style>", html)
+html = re.sub(r"\{\{inline-js:([^}]+)\}\}", lambda m: "<script>\n" + (HERE / m.group(1)).read_text(encoding="utf-8").replace("</script", "<\\/script") + "\n</script>", html)
 out = re.sub(r"\{\{img:([^|}]+)\|([^|}]*)(?:\|([^}]*))?\}\}", embed, html)
-assert "{{" not in out, "unreplaced placeholder"
+assert not re.search(r"\{\{(img|svg|inline)", out), "unreplaced placeholder"
+assert not re.search(r'(src|href)="https?://(?!github\.com|calma-)', out.split("<body>")[0]), "external resource left in <head>"
 (HERE.parent / "slides.html").write_text(out, encoding="utf-8")
 print(f"wrote slides.html ({len(out) / 1e6:.1f} MB)")

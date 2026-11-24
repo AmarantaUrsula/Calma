@@ -844,3 +844,11 @@ Suggested confirming with clinics which identifier they'd use.
 **Outcome:** Yes, both open by double-clicking, with no hosting. Checked what each file loads from the web: report.html loads nothing (images and diagrams are inside the file), so it works even offline. slides.html has its screenshots inside, but loads reveal.js and the font from a CDN (as the professor's instructions suggested), so it needs an internet connection to show as slides. No changes besides this log entry.
 
 ---
+
+## Prompt 63 — 2026-11-24
+
+> Yes, make it offline
+
+**Outcome:** slides.html now works with no internet connection. Downloaded reveal.js 5.1.0 (reset.css, reveal.css, reveal.js and its MIT license) from jsDelivr into `report-assets/vendor/reveal/`; `build_slides.py` now places them inside slides.html and refuses to build if any external resource is left in the page header. The font changed from Source Serif 4 (a web font) to a built-in serif (Iowan Old Style / Palatino / Georgia). File is 0.5 MB. Checked in the browser: reveal.js runs, all 10 slides load, zero requests leave the computer, and nothing overflows at 1280×720. README updated.
+
+---

@@ -152,7 +152,7 @@ Sending the demo to colleagues? Share [DEMO_GUIDE.md](DEMO_GUIDE.md) (fill in th
 
 **Project report:** [report.html](report.html) is a single file with all images embedded; it prints at about 15 letter pages. To rebuild it after editing `report-assets/report_template.html`, run `cd report-assets && python3 build_report.py`. [report.pdf](report.pdf) is a print of it (Chrome → Print → Save as PDF, Letter, background graphics on); re-export it after editing the report.
 
-**Slide deck:** [slides.html](slides.html) is a 10-slide reveal.js deck with the screenshots and diagram embedded (reveal.js loads from a CDN, so presenting needs internet). Arrow keys move between slides; F goes full screen. To rebuild after editing `report-assets/slides_template.html`, run `cd report-assets && python3 build_slides.py`.
+**Slide deck:** [slides.html](slides.html) is a 10-slide reveal.js deck with the screenshots and diagram embedded (reveal.js is inlined from `report-assets/vendor/reveal/`, so it works offline). Arrow keys move between slides; F goes full screen. To rebuild after editing `report-assets/slides_template.html`, run `cd report-assets && python3 build_slides.py`.
 
 ## AI setup
 
