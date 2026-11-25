@@ -876,3 +876,11 @@ Suggested confirming with clinics which identifier they'd use.
 **Outcome:** Explained: an .html file uploads like any other file (Canvas "Upload file" or drag and drop; Canvas may show it as a download, which opens in the browser). Gave the folder where report.html and slides.html live, noted both are already on GitHub (so nothing more to upload there), and that the professor can also just use the links. No other changes.
 
 ---
+
+## Prompt 67 — 2026-11-24
+
+> are the report and slides html in my repo?
+
+**Outcome:** Yes. Checked GitHub directly: report.html, slides.html and report.pdf are at the top level of the main branch, both HTML pages open on github.com, and local main matches GitHub. No changes besides this log entry.
+
+---
