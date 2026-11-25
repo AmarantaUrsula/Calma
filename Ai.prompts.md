@@ -868,3 +868,11 @@ Suggested confirming with clinics which identifier they'd use.
 **Outcome:** Git is up to date (local main = GitHub, nothing uncommitted). GitHub's own file links show HTML as source code, and GitHub Pages isn't turned on for the repo, so gave links through raw.githack.com, a free service that serves files from a public GitHub repo as normal web pages: https://raw.githack.com/AmarantaUrsula/Calma/main/report.html and https://raw.githack.com/AmarantaUrsula/Calma/main/slides.html (checked: both return the exact files in the repo). Also gave the PDF link and the option of turning on GitHub Pages for official github.io links.
 
 ---
+
+## Prompt 66 — 2026-11-24
+
+> how do you upload an html
+
+**Outcome:** Explained: an .html file uploads like any other file (Canvas "Upload file" or drag and drop; Canvas may show it as a download, which opens in the browser). Gave the folder where report.html and slides.html live, noted both are already on GitHub (so nothing more to upload there), and that the professor can also just use the links. No other changes.
+
+---
